@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,37 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TouristSignUpScreen({ navigation }) {
+  const [email, setEmail] = useState("");
+  const [isValidEmail, setIsValidEmail] = useState(true);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailChange = (text) => {
+    setEmail(text);
+    // Only validate when there's text, don't show error when empty
+    if (text.length > 0) {
+      setIsValidEmail(validateEmail(text));
+    } else {
+      setIsValidEmail(true);
+    }
+  };
+
+  const handleSendOTP = () => {
+    if (validateEmail(email)) {
+      navigation.navigate("OTP", { email: email });
+    } else {
+      setIsValidEmail(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeContainer}>
       <View style={styles.container}>
@@ -27,17 +54,35 @@ export default function TouristSignUpScreen({ navigation }) {
 
         <View style={styles.formContainer}>
           <View style={styles.inputField}>
-            <Text style={styles.inputLabel}>Mobile Number</Text>
-            <View style={styles.inputContainer}>
-              <Text style={styles.countryCode}>+91</Text>
-              <View style={styles.inputDivider} />
-              <Text style={styles.phoneInput}>Enter your mobile number</Text>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <View style={[
+              styles.inputContainer,
+              !isValidEmail && styles.inputContainerError
+            ]}>
+              <Ionicons name="mail-outline" size={20} color="#999" style={styles.emailIcon} />
+              <TextInput
+                style={styles.emailInput}
+                placeholder="Enter your email address"
+                placeholderTextColor="#999"
+                value={email}
+                onChangeText={handleEmailChange}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
             </View>
+            {!isValidEmail && (
+              <Text style={styles.errorText}>Please enter a valid email address</Text>
+            )}
           </View>
 
           <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={() => navigation.navigate("OTP", { mobileNumber: "+91 XXXXX XXXXX" })}
+            style={[
+              styles.primaryButton,
+              email.length === 0 && styles.primaryButtonDisabled
+            ]}
+            onPress={handleSendOTP}
+            disabled={email.length === 0}
           >
             <Text style={styles.primaryButtonText}>Send OTP</Text>
           </TouchableOpacity>
@@ -106,20 +151,16 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     backgroundColor: "#fff",
   },
-  countryCode: {
+  inputContainerError: {
+    borderColor: "#ff3b30",
+  },
+  emailIcon: {
+    marginRight: 10,
+  },
+  emailInput: {
+    flex: 1,
     fontSize: 16,
     color: "#03474f",
-    fontWeight: "600",
-  },
-  inputDivider: {
-    height: 20,
-    width: 1,
-    backgroundColor: "#ddd",
-    marginHorizontal: 10,
-  },
-  phoneInput: {
-    fontSize: 16,
-    color: "#999",
   },
   primaryButton: {
     backgroundColor: "#03474f",
@@ -127,6 +168,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 20,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: "#ccc",
   },
   primaryButtonText: {
     color: "#fff",
@@ -148,5 +192,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     textAlign: "center",
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#ff3b30",
+    marginTop: 5,
+    marginLeft: 5,
   },
 });
