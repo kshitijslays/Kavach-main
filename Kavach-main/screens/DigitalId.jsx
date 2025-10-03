@@ -2,10 +2,13 @@ import React from "react";
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
-export default function DigitalIDScreen({ navigation }) {
-  const touristName = "John Doe"; // Replace with dynamic name
-  const profileType = "International Tourist"; // Replace with actual selected profile
-  const digitalId = "TID-20250908-12345"; // Mock Digital ID number
+export default function DigitalIDScreen({ navigation, route }) {
+  const profile = route.params?.profile;
+  const tripData = route.params?.tripData;
+  
+  const touristName = tripData?.emergencyName || "Tourist User";
+  const profileType = profile?.title || "Traveler";
+  const digitalId = `TID-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 100000)}`;
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -30,9 +33,16 @@ export default function DigitalIDScreen({ navigation }) {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("HomePage")} // Changed from HomePage component to string "HomePage"
+          onPress={() => {
+            console.log('🏁 Setup completed! Navigating to Home');
+            navigation.navigate("Home", {
+              setupCompleted: true,
+              profile: route.params?.profile,
+              tripData: route.params?.tripData
+            });
+          }}
         >
-          <Text style={styles.buttonText}>Go to Home Page</Text>
+          <Text style={styles.buttonText}>Complete Setup & Go to Home</Text>
         </TouchableOpacity>
 
 // ...existing code...

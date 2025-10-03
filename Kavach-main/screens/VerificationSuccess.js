@@ -9,7 +9,17 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 export default function VerificationSuccess({ navigation, route }) {
-  const mobileNumber = route.params?.mobileNumber || "+91 XXXXX XXXXX";
+  const email = route.params?.email || "your-email@domain.com";
+  const nextScreen = route.params?.nextScreen || "TravelProfile";
+
+  const handleContinue = () => {
+    console.log('🎯 Navigating to:', nextScreen);
+    // Navigate immediately for better UX
+    navigation.navigate(nextScreen, { 
+      userEmail: email,
+      fromVerification: true 
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -22,16 +32,16 @@ export default function VerificationSuccess({ navigation, route }) {
           <Text style={styles.title}>Verification Successful!</Text>
           
           <Text style={styles.subtitle}>
-            Welcome to Surakshit Yatra. Your account has been successfully verified.
+            Welcome to Kavach. Your email has been successfully verified.
           </Text>
           
           <Text style={styles.mobileText}>
-            Verified number: {mobileNumber}
+            Verified email: {email}
           </Text>
           
           <TouchableOpacity 
             style={styles.button}
-            onPress={() => navigation.navigate("TravelProfileScreen")} // Updated to navigate to TravelProfileScreen
+            onPress={handleContinue}
           >
             <Text style={styles.buttonText}>Continue to Profile</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />

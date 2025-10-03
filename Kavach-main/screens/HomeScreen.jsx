@@ -13,10 +13,22 @@ import {
 
 const { width } = Dimensions.get("window");
 
-export default function HomeScreen() {
+export default function HomeScreen({ route }) {
+  const setupCompleted = route?.params?.setupCompleted;
+  const profile = route?.params?.profile;
+  
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      
+      {/* Welcome Banner for New Users */}
+      {setupCompleted && (
+        <View style={styles.welcomeBanner}>
+          <Text style={styles.welcomeText}>
+            🎉 Welcome to Kavach! Your {profile?.title || 'travel'} setup is complete.
+          </Text>
+        </View>
+      )}
 
       {/* Header */}
       <View style={styles.header}>
@@ -393,5 +405,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginLeft: 8,
+  },
+  welcomeBanner: {
+    backgroundColor: "#E8F5E8",
+    padding: 15,
+    marginHorizontal: 15,
+    marginTop: 10,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#27AE60",
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: "#03474f",
+    fontWeight: "500",
+    textAlign: "center",
   },
 });

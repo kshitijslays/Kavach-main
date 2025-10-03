@@ -55,7 +55,14 @@ export default function KycScreen({ route, navigation }) {
               <Text style={styles.successText}>KYC Successful!</Text>
               <TouchableOpacity 
                 style={styles.primaryBtn}
-                onPress={() => navigation.navigate("TripDetails", { profile })}
+                onPress={() => {
+                  console.log('✅ KYC completed, navigating to TripDetails');
+                  navigation.navigate("TripDetails", { 
+                    profile,
+                    kycCompleted: true,
+                    selectedProfile: route.params?.selectedProfile
+                  });
+                }}
               >
                 <Text style={styles.primaryBtnText}>Continue</Text>
               </TouchableOpacity>

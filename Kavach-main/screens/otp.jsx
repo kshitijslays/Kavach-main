@@ -10,18 +10,21 @@ import {
   Platform,
   Alert,
   Animated,
-  Easing
+  Easing,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import VerificationSuccess from "./VerificationSuccess";
+import { authAPI } from '../services/api';
 
 export default function OTPScreen({ navigation, route }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(30);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef([]);
   const shakeAnimation = new Animated.Value(0);
-  const mobileNumber = route.params?.mobileNumber || "+91 XXXXX XXXXX";
+  const email = route.params?.email || "";
+  const fromScreen = route.params?.fromScreen || "Login";
 
   useEffect(() => {
     // Start timer on component mount
@@ -47,9 +50,17 @@ export default function OTPScreen({ navigation, route }) {
       inputRefs.current[index + 1].focus();
     }
     
-    // Auto submit if last digit is entered
-    if (value && index === 5) {
-      handleNext();
+    // Auto submit if last digit is entered (with delay to prevent double calls)
+    if (value && index === 5 && !loading) {
+      console.log('🔢 Last digit entered, auto-submitting...');
+      setTimeout(() => {
+        if (!loading) {
+          console.log('⚡ Auto-submit executing...');
+          handleNext();
+        } else {
+          console.log('⚠️ Auto-submit skipped - already loading');
+        }
+      }, 200); // Slightly longer delay
     }
   };
 
@@ -60,11 +71,46 @@ export default function OTPScreen({ navigation, route }) {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const enteredOtp = otp.join("");
-    if (enteredOtp.length === 6) {
-      // Mock verification success - navigate to VerificationSuccess
-      navigation.navigate("VerificationSuccess", { mobileNumber });
+    if (enteredOtp.length === 6 && !loading) {
+      setLoading(true);
+      console.log('🔐 Starting OTP verification for:', email);
+      
+      try {
+        console.log('🔐 Verifying OTP:', enteredOtp, 'for email:', email);
+        const data = await authAPI.verifyOTP(email, enteredOtp);
+        console.log('✅ OTP verification response:', data);
+        
+        // Store the token for future API calls
+        // await AsyncStorage.setItem('userToken', data.token);
+        
+        // Check if it's a duplicate request message
+        if (data.message?.includes('already in progress')) {
+          console.log('⚠️ Duplicate request, ignoring...');
+          return; // Don't show success for duplicate requests
+        }
+        
+        // Navigate directly without alert for better UX
+        console.log('🎉 Navigating to success screen...');
+        navigation.navigate('VerificationSuccess', {
+          email: email,
+          nextScreen: 'TravelProfile' // Can be customized based on user type
+        });
+      } catch (error) {
+        console.error('❌ Verify OTP Error:', error);
+        Alert.alert(
+          'Verification Failed', 
+          error.message || 'Invalid or expired OTP. Please try again or request a new OTP.'
+        );
+        shakeInput();
+        setOtp(["", "", "", "", "", ""]);
+        if (inputRefs.current[0]) {
+          inputRefs.current[0].focus();
+        }
+      } finally {
+        setLoading(false);
+      }
     } else {
       // Shake animation for invalid OTP
       shakeInput();
@@ -101,12 +147,35 @@ export default function OTPScreen({ navigation, route }) {
     ]).start();
   };
 
-  const resendOTP = () => {
-    setTimer(30);
-    setIsResendDisabled(true);
-    setOtp(["", "", "", "", "", ""]);
-    inputRefs.current[0].focus();
-    Alert.alert("OTP Resent", "A new OTP has been sent to your mobile number");
+  const resendOTP = async () => {
+    try {
+      console.log('📧 Resending OTP to:', email);
+      setIsResendDisabled(true);
+      setTimer(30);
+      
+      const result = await authAPI.sendOTP(email);
+      console.log('✅ Resend OTP result:', result);
+      
+      setOtp(["", "", "", "", "", ""]);
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
+      
+      Alert.alert(
+        "OTP Resent", 
+        result?.warning 
+          ? "New OTP generated. Check your email or try the previous OTP if this fails."
+          : "A new OTP has been sent to your email"
+      );
+    } catch (error) {
+      console.error('❌ Resend OTP Error:', error);
+      setIsResendDisabled(false);
+      setTimer(0);
+      Alert.alert(
+        'Error', 
+        error.message || 'Failed to resend OTP. Please try again.'
+      );
+    }
   };
 
   const translateX = shakeAnimation.interpolate({
@@ -141,11 +210,11 @@ export default function OTPScreen({ navigation, route }) {
           </Text>
           
           <Text style={styles.message}>
-            We've sent a 6-digit code to your registered number
+            We've sent a 6-digit code to your registered email
           </Text>
           
           <Text style={styles.mobileText}>
-            {mobileNumber}
+            {email}
           </Text>
 
           <Animated.View style={[styles.otpContainer, { transform: [{ translateX }] }]}>
@@ -165,12 +234,18 @@ export default function OTPScreen({ navigation, route }) {
           </Animated.View>
 
           <TouchableOpacity 
-            style={[styles.button, otp.join("").length !== 6 && styles.buttonDisabled]}
+            style={[styles.button, (otp.join("").length !== 6 || loading) && styles.buttonDisabled]}
             onPress={handleNext}
-            disabled={otp.join("").length !== 6}
+            disabled={otp.join("").length !== 6 || loading}
           >
-            <Text style={styles.buttonText}>Verify & Continue</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Text style={styles.buttonText}>Verify & Continue</Text>
+                <Ionicons name="arrow-forward" size={20} color="#fff" />
+              </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.resendContainer}>
