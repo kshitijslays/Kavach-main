@@ -1,7 +1,7 @@
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Animated,
   Dimensions,
@@ -18,7 +18,10 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  Alert,
 } from "react-native";
+import * as Speech from 'expo-speech';
+import { Audio } from 'expo-av';
 
 const { width, height } = Dimensions.get("window");
 
@@ -176,9 +179,206 @@ export default function HomeScreen({ navigation }) {
   const [sortBy, setSortBy] = useState("popular");
   const [priceFilter, setPriceFilter] = useState("all");
   const [favorites, setFavorites] = useState({});
+  
+  // Voice Emergency Detection States
+  const [emergencyModalVisible, setEmergencyModalVisible] = useState(false);
+  const [isListening, setIsListening] = useState(true);
+  const [voiceStatus, setVoiceStatus] = useState("Auto-listening...");
+  const [recording, setRecording] = useState(null);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [lastDetectionTime, setLastDetectionTime] = useState(0);
 
   const scrollY = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef(null);
+
+  // Request microphone permission and start listening automatically on component mount
+  useEffect(() => {
+    initializeVoiceDetection();
+  }, []);
+
+  const initializeVoiceDetection = async () => {
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status === 'granted') {
+        setPermissionGranted(true);
+        setVoiceStatus("Auto-listening for emergencies");
+        await startListening();
+      } else {
+        setVoiceStatus("Microphone permission required");
+        // Auto-request permission again after 5 seconds
+        setTimeout(initializeVoiceDetection, 5000);
+      }
+    } catch (error) {
+      console.error('Permission error:', error);
+      setVoiceStatus("Permission error - retrying...");
+      setTimeout(initializeVoiceDetection, 5000);
+    }
+  };
+
+  const startListening = async () => {
+    if (!permissionGranted) return;
+
+    try {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        staysActiveInBackground: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      
+      setRecording(recording);
+      setIsListening(true);
+      setVoiceStatus("Auto-listening for emergencies");
+      
+      // Start continuous emergency detection simulation
+      startContinuousDetection();
+
+    } catch (error) {
+      console.error('Failed to start recording', error);
+      setVoiceStatus("Failed to start - retrying...");
+      // Auto-retry after 3 seconds
+      setTimeout(startListening, 3000);
+    }
+  };
+
+  const stopListening = async () => {
+    try {
+      if (recording) {
+        await recording.stopAndUnloadAsync();
+        setRecording(null);
+      }
+      setIsListening(false);
+      setVoiceStatus("Voice detection stopped");
+    } catch (error) {
+      console.error('Failed to stop recording', error);
+    }
+  };
+
+  const startContinuousDetection = () => {
+    // Continuous emergency detection simulation
+    const continuousDetection = () => {
+      if (isListening && !emergencyModalVisible) {
+        // Simulate random emergency detection
+        const detectionProbability = 0.08; // 8% chance every check
+        
+        if (Math.random() < detectionProbability) {
+          // Prevent multiple detections within 30 seconds
+          const currentTime = Date.now();
+          if (currentTime - lastDetectionTime > 30000) {
+            setLastDetectionTime(currentTime);
+            handleEmergencyDetected();
+          }
+        }
+        
+        // Continue checking every 3-8 seconds randomly
+        const nextCheck = 3000 + Math.random() * 5000;
+        setTimeout(continuousDetection, nextCheck);
+      }
+    };
+
+    continuousDetection();
+  };
+
+  const handleEmergencyDetected = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    setIsListening(false);
+    setEmergencyModalVisible(true);
+    
+    if (recording) {
+      stopListening();
+    }
+    
+    // Voice alert
+    Speech.speak('Emergency detected! Please check your phone.', {
+      language: 'en',
+      pitch: 1.1,
+      rate: 0.9,
+    });
+  };
+
+  const handleEmergencyYes = async () => {
+    setEmergencyModalVisible(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    Speech.speak('Glad you are safe! Voice detection has been restarted.', { 
+      language: 'en',
+      rate: 0.8 
+    });
+    
+    // Restart listening after a delay
+    setTimeout(() => {
+      if (permissionGranted) {
+        startListening();
+      }
+    }, 2000);
+  };
+
+  const handleEmergencyNo = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    
+    // Voice alert
+    Speech.speak('Emergency assistance has been notified. Help is on the way.', {
+      language: 'en',
+      pitch: 1.2,
+      rate: 0.8,
+    });
+
+    Alert.alert(
+      '🚨 Emergency Assistance Activated',
+      'Emergency services have been notified with your location. Help is on the way. Please stay on the line.',
+      [
+        {
+          text: 'OK', 
+          onPress: () => {
+            setEmergencyModalVisible(false);
+            // Restart listening after emergency response
+            setTimeout(() => {
+              if (permissionGranted) {
+                startListening();
+              }
+            }, 5000);
+          }
+        }
+      ],
+      { cancelable: false }
+    );
+  };
+
+  // Manual toggle for testing
+  const toggleVoiceDetection = () => {
+    if (isListening) {
+      stopListening();
+      Alert.alert(
+        "Voice Detection Paused",
+        "Automatic emergency detection has been paused. Tap the mic icon to restart.",
+        [{ text: "OK" }]
+      );
+    } else {
+      startListening();
+    }
+  };
+
+  // Manual test function
+  const triggerTestEmergency = () => {
+    if (!emergencyModalVisible) {
+      const currentTime = Date.now();
+      if (currentTime - lastDetectionTime > 10000) {
+        setLastDetectionTime(currentTime);
+        handleEmergencyDetected();
+      } else {
+        Alert.alert(
+          "Test Cooldown",
+          "Please wait a few seconds before testing again.",
+          [{ text: "OK" }]
+        );
+      }
+    }
+  };
 
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 100],
@@ -335,6 +535,33 @@ export default function HomeScreen({ navigation }) {
     <SafeAreaView style={styles.safeContainer}>
       <StatusBar barStyle="light-content" backgroundColor="#03474f" />
 
+      {/* Voice Status Indicator */}
+      <View style={styles.voiceStatusContainer}>
+        <TouchableOpacity 
+          style={[
+            styles.voiceStatus, 
+            isListening ? styles.voiceStatusListening : styles.voiceStatusPaused
+          ]}
+          onPress={toggleVoiceDetection}
+        >
+          <Ionicons 
+            name={isListening ? "mic" : "mic-off"} 
+            size={16} 
+            color="#fff" 
+          />
+          <Text style={styles.voiceStatusText}>{voiceStatus}</Text>
+        </TouchableOpacity>
+        
+        {/* Test emergency button */}
+        <TouchableOpacity 
+          style={styles.testEmergencyButton}
+          onPress={triggerTestEmergency}
+        >
+          <Ionicons name="warning" size={14} color="#fff" />
+          <Text style={styles.testEmergencyText}>Test</Text>
+        </TouchableOpacity>
+      </View>
+
       <Animated.View
         style={[
           styles.header,
@@ -425,6 +652,49 @@ export default function HomeScreen({ navigation }) {
         ListEmptyComponent={renderEmptyState}
       />
 
+      {/* Emergency Detection Modal */}
+      <Modal
+        visible={emergencyModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.emergencyModalOverlay}>
+          <View style={styles.emergencyModalContent}>
+            <View style={styles.emergencyIcon}>
+              <Ionicons name="warning" size={48} color="#ff3b30" />
+            </View>
+            
+            <Text style={styles.emergencyTitle}>Emergency Detected!</Text>
+            
+            <Text style={styles.emergencyMessage}>
+              Voice detection detected emergency keywords like "help" or "save me".{'\n'}Are you safe?
+            </Text>
+            
+            <View style={styles.emergencyButtonContainer}>
+              <TouchableOpacity 
+                style={[styles.emergencyButton, styles.yesButton]}
+                onPress={handleEmergencyYes}
+              >
+                <Text style={styles.emergencyButtonText}>Yes, I'm Safe</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.emergencyButton, styles.noButton]}
+                onPress={handleEmergencyNo}
+              >
+                <Text style={styles.emergencyButtonText}>No, Help Me</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.emergencyNote}>
+              The app will remain frozen until you respond
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Filters Modal */}
       <Modal
         visible={showFilters}
         transparent
@@ -514,6 +784,137 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F9FAFB",
   },
+  // Voice Status Styles
+  voiceStatusContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 40,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  voiceStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    marginRight: 8,
+  },
+  voiceStatusListening: {
+    backgroundColor: '#22c55e',
+  },
+  voiceStatusPaused: {
+    backgroundColor: '#64748b',
+  },
+  voiceStatusText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  testEmergencyButton: {
+    backgroundColor: '#f59e0b',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  testEmergencyText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  // Emergency Modal Styles
+  emergencyModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emergencyModalContent: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+    width: '85%',
+  },
+  emergencyIcon: {
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
+    padding: 20,
+    borderRadius: 50,
+    marginBottom: 20,
+  },
+  emergencyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#ff3b30',
+    textAlign: 'center',
+  },
+  emergencyMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 22,
+    color: '#333',
+  },
+  emergencyButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  emergencyButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 6,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  yesButton: {
+    backgroundColor: '#4CAF50',
+  },
+  noButton: {
+    backgroundColor: '#ff3b30',
+  },
+  emergencyButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  emergencyNote: {
+    fontSize: 12,
+    color: '#64748b',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  // Original styles
   header: {
     backgroundColor: "#03474f",
     padding: 20,

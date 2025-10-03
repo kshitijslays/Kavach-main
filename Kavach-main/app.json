@@ -16,6 +16,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+       "permissions": [
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "INTERNET"
+      ],
       "edgeToEdgeEnabled": true
     },
     "web": {
