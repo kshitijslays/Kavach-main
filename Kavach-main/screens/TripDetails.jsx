@@ -17,7 +17,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 // Import the DigitalId component
 import DigitalId from "./DigitalId";
 
-export default function TripDetailsScreen({ navigation }) {
+export default function TripDetailsScreen({ navigation, route }) {
   const [emergencyName, setEmergencyName] = useState("");
   const [emergencyNumber, setEmergencyNumber] = useState("");
   const [startDate, setStartDate] = useState(new Date());
@@ -44,6 +44,7 @@ export default function TripDetailsScreen({ navigation }) {
 
   const handleGenerateID = () => {
     if (validateForm()) {
+      console.log('📝 Trip details completed, generating Digital ID');
       navigation.navigate("DigitalID", {
         tripData: {
           emergencyName,
@@ -51,7 +52,10 @@ export default function TripDetailsScreen({ navigation }) {
           startDate,
           endDate,
           destination
-        }
+        },
+        profile: route.params?.profile,
+        selectedProfile: route.params?.selectedProfile,
+        kycCompleted: route.params?.kycCompleted
       });
     }
   };

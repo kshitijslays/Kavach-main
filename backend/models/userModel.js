@@ -9,11 +9,17 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  phone: {
+    type: String,
+  },
   password: {
     type: String,
   },
   otp: {
     type: String,
+  },
+  otpExpiry: {
+    type: Date,
   },
   isVerified: {
     type: Boolean,
@@ -22,6 +28,8 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
   },
+}, {
+  timestamps: true,
 });
 
 const User = mongoose.model("User", userSchema);

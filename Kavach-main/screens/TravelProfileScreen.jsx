@@ -23,25 +23,26 @@ export default function TravelProfileScreen({ navigation }) {
       icon: "person-outline",
       description: "Perfect for independent travelers",
       // Add a screen property to specify which component to navigate to
-      screen: "KycSimulation",
+      screen: "KYCSimulation",
     },
     {
       id: "family",
       title: "Traveling with Family",
       icon: "people-outline",
       description: "Safety features for group travel",
-      screen: "KYC", // Default KYC screen for other options
+      screen: "KYCSimulation", // Default KYC screen for other options
     },
     {
       id: "international",
       title: "International Tourist",
       icon: "airplane-outline",
       description: "Special assistance for foreign visitors",
-      screen: "KYC", // Default KYC screen for other options
+      screen: "KYCSimulation", // Default KYC screen for other options
     },
   ];
 
   const handleSelect = (profile) => {
+    console.log('👤 Profile selected:', profile.title);
     setSelectedId(profile.id);
     Animated.sequence([
       Animated.timing(scaleAnim, {
@@ -56,7 +57,12 @@ export default function TravelProfileScreen({ navigation }) {
       }),
     ]).start(() => {
       // Navigate to the screen specified in the profile object
-      navigation.navigate(profile.screen, { profile });
+      console.log('🎯 Navigating to:', profile.screen, 'with profile:', profile);
+      navigation.navigate(profile.screen, { 
+        profile,
+        selectedProfile: profile.id,
+        userEmail: navigation.getState()?.routes?.find(r => r.params?.userEmail)?.params?.userEmail
+      });
     });
   };
 

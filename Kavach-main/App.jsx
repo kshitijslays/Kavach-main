@@ -12,11 +12,12 @@ import AuthorityLoginScreen from "./screens/AuthorityLoginScreen.jsx";
 import OTPScreen from "./screens/otp.jsx";
 import VerificationSuccess from "./screens/VerificationSuccess";
 import TravelProfileScreen from "./screens/TravelProfileScreen";
-import KycSimulation from './screens/KYCSimulation.jsx';
-import TripDetails from './screens/TripDetails.jsx'
-import DigitalId from "./screens/DigitalId.jsx"
-import HomePage from "./screens/HomePage.jsx"
+import KycSimulation from "./screens/KYCSimulation.jsx";
+import TripDetails from "./screens/TripDetails.jsx";
+import DigitalId from "./screens/DigitalId.jsx";
+import HomePage from "./screens/HomePage.jsx";
 import TabNavigator from "./navigations/TabNavigator.jsx";
+import VoiceAlert from "./screens/VoiceAlert.js";
 // import PoliceDashboard from "./screens/PolicDashboard.js";
 
 const Stack = createNativeStackNavigator();
@@ -36,12 +37,15 @@ export default function App() {
         <Stack.Screen name="TouristSignUp" component={TouristSignUpScreen} />
         <Stack.Screen name="AuthorityLogin" component={AuthorityLoginScreen} />
         <Stack.Screen name="OTP" component={OTPScreen} />
-        <Stack.Screen name="VerificationSuccess" component={VerificationSuccess} />
-        <Stack.Screen name="TravelProfileScreen" component={TravelProfileScreen} />
-        <Stack.Screen name="KycSimulation" component={KycSimulation} />
+        <Stack.Screen
+          name="VerificationSuccess"
+          component={VerificationSuccess}
+        />
+        <Stack.Screen name="TravelProfile" component={TravelProfileScreen} />
+        <Stack.Screen name="KYCSimulation" component={KycSimulation} />
         <Stack.Screen name="TripDetails" component={TripDetails} />
         <Stack.Screen name="DigitalID" component={DigitalId} />
-        <Stack.Screen name="HomePage" component={TabNavigator} />
+        <Stack.Screen name="Home" component={TabNavigator} />
       </Stack.Navigator>
     </NavigationContainer>
   );
