@@ -8,12 +8,15 @@ import {
   StatusBar,
   Platform,
   TextInput,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TouristSignUpScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [isValidEmail, setIsValidEmail] = useState(true);
+  const [isTouched, setIsTouched] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,21 +25,67 @@ export default function TouristSignUpScreen({ navigation }) {
 
   const handleEmailChange = (text) => {
     setEmail(text);
-    // Only validate when there's text, don't show error when empty
-    if (text.length > 0) {
+    if (isTouched) {
       setIsValidEmail(validateEmail(text));
-    } else {
-      setIsValidEmail(true);
     }
   };
 
-  const handleSendOTP = () => {
-    if (validateEmail(email)) {
-      navigation.navigate("OTP", { email: email });
-    } else {
+  const handleSendOTP = async () => {
+    console.log("=== SEND OTP CLICKED ===");
+    console.log("Email:", email);
+    console.log("Is valid email:", validateEmail(email));
+    
+    setIsTouched(true);
+    
+    // Validate email
+    if (!validateEmail(email)) {
+      console.log("Invalid email, showing error");
       setIsValidEmail(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setIsValidEmail(true);
+
+    try {
+      console.log("Attempting to navigate to OTP screen...");
+      
+      // Simulate API call delay to see if that's the issue
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Navigate to OTP screen
+      navigation.navigate("OTP", { 
+        email: email,
+        source: "send-otp" // Add identifier to track the source
+      });
+      
+      console.log("Navigation successful");
+      
+    } catch (error) {
+      console.error("Navigation error:", error);
+      Alert.alert("Error", "Failed to navigate to OTP screen");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleResendOTP = () => {
+    console.log("=== RESEND OTP CLICKED ===");
+    console.log("Email:", email);
+    
+    if (!validateEmail(email)) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    // For debugging - simulate what might be happening in your OTP screen
+    console.log("Resend OTP logic would be called here");
+    
+    // If resend works but send doesn't, the issue might be in navigation timing
+    // or the OTP screen's initial loading logic
+  };
+
+  const isButtonDisabled = !email || !validateEmail(email) || isLoading;
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -53,6 +102,10 @@ export default function TouristSignUpScreen({ navigation }) {
         </View>
 
         <View style={styles.formContainer}>
+          <Text style={styles.subtitle}>
+            Enter your email address to receive OTP
+          </Text>
+
           <View style={styles.inputField}>
             <Text style={styles.inputLabel}>Email Address</Text>
             <View style={[
@@ -66,9 +119,11 @@ export default function TouristSignUpScreen({ navigation }) {
                 placeholderTextColor="#999"
                 value={email}
                 onChangeText={handleEmailChange}
+                onBlur={() => setIsTouched(true)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={!isLoading}
               />
             </View>
             {!isValidEmail && (
@@ -79,17 +134,36 @@ export default function TouristSignUpScreen({ navigation }) {
           <TouchableOpacity
             style={[
               styles.primaryButton,
-              email.length === 0 && styles.primaryButtonDisabled
+              isButtonDisabled && styles.primaryButtonDisabled
             ]}
             onPress={handleSendOTP}
-            disabled={email.length === 0}
+            disabled={isButtonDisabled}
           >
-            <Text style={styles.primaryButtonText}>Send OTP</Text>
+            <Text style={styles.primaryButtonText}>
+              {isLoading ? "Sending..." : "Send OTP"}
+            </Text>
           </TouchableOpacity>
+
+          {/* Debug Info - Remove in production */}
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugText}>Debug Info:</Text>
+            <Text style={styles.debugText}>Email: {email || "empty"}</Text>
+            <Text style={styles.debugText}>Valid: {validateEmail(email) ? "Yes" : "No"}</Text>
+            <Text style={styles.debugText}>Touched: {isTouched ? "Yes" : "No"}</Text>
+            <Text style={styles.debugText}>Loading: {isLoading ? "Yes" : "No"}</Text>
+          </View>
 
           <Text style={styles.termsText}>
             By continuing, you agree to our Terms of Service and Privacy Policy
           </Text>
+
+          {/* Test Resend Button for debugging */}
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handleResendOTP}
+          >
+            <Text style={styles.secondaryButtonText}>Test Resend OTP</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.helpSection}>
@@ -128,6 +202,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#03474f",
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 30,
+    lineHeight: 22,
   },
   formContainer: {
     flex: 1,
@@ -168,13 +250,37 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   primaryButtonDisabled: {
     backgroundColor: "#ccc",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   primaryButtonText: {
     color: "#fff",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  secondaryButton: {
+    backgroundColor: "transparent",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#03474f",
+  },
+  secondaryButtonText: {
+    color: "#03474f",
+    fontSize: 14,
     fontWeight: "bold",
   },
   termsText: {
@@ -182,6 +288,7 @@ const styles = StyleSheet.create({
     color: "#999",
     textAlign: "center",
     lineHeight: 18,
+    marginBottom: 20,
   },
   helpSection: {
     paddingVertical: 15,
@@ -198,5 +305,18 @@ const styles = StyleSheet.create({
     color: "#ff3b30",
     marginTop: 5,
     marginLeft: 5,
+  },
+  debugContainer: {
+    backgroundColor: "#f0f0f0",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: "#03474f",
+  },
+  debugText: {
+    fontSize: 12,
+    color: "#666",
+    fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
   },
 });
