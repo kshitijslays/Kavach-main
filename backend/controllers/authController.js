@@ -22,7 +22,6 @@ export const sendOTP = async (req, res) => {
     console.log(`📝 OTP stored in memory for: ${email}`);
     console.log(`🔐 Generated OTP: ${otp} (expires in 5 minutes)`);
 
-    // Try database operations as backup
     try {
       let user = await User.findOne({ email });
       if (!user) {
@@ -39,7 +38,6 @@ export const sendOTP = async (req, res) => {
       console.log(`📝 Using memory storage only`);
     }
 
-    // Try to send email
     try {
       console.log(`📧 Attempting to send email to: ${email}`);
       const emailResult = await sendMail(
@@ -84,8 +82,6 @@ export const sendOTP = async (req, res) => {
   }
 };
 
-// ✅ Verify OTP for login/register - FIXED VERSION
-// Track ongoing verifications to prevent double processing
 const ongoingVerifications = new Set();
 
 export const verifyOTP = async (req, res) => {
@@ -97,21 +93,18 @@ export const verifyOTP = async (req, res) => {
   console.log(`🔐 Received OTP: "${otp}" (type: ${typeof otp})`);
   console.log(`⏰ Request timestamp: ${new Date().toISOString()}`);
 
-  // Check if this exact verification is already in progress
   if (ongoingVerifications.has(verificationKey)) {
     console.log(`⚠️ Duplicate verification request detected, ignoring`);
     return res.status(409).json({ message: "Verification already in progress" });
   }
 
-  // Mark this verification as ongoing
   ongoingVerifications.add(verificationKey);
 
   try {
     let user = null;
     let isValidOTP = false;
-    let storedOTP = null; // Declare in higher scope
+    let storedOTP = null; 
 
-    // Convert both to strings for reliable comparison
     const receivedOTP = String(otp).trim();
     console.log(`🔄 Normalized received OTP: "${receivedOTP}"`);
 
@@ -212,12 +205,12 @@ export const verifyOTP = async (req, res) => {
     console.error(`❌ OTP verification error:`, err.message);
     res.status(500).json({ message: "OTP verification failed", error: err.message });
   } finally {
-    // Always clean up the ongoing verification tracker
+
     ongoingVerifications.delete(verificationKey);
   }
 };
 
-// 🔐 Google Login
+
 export const googleLogin = async (req, res) => {
   const { idToken } = req.body;
 
