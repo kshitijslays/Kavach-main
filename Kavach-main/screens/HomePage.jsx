@@ -1,780 +1,274 @@
-import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Platform,
+  StatusBar
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useRef, useState, useEffect } from "react";
-import {
-  Animated,
-  Dimensions,
-  FlatList,
-  Image,
-  Modal,
-  Platform,
-  RefreshControl,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-  Alert,
-} from "react-native";
-import * as Speech from 'expo-speech';
-import { Audio } from 'expo-av';
 
-const { width, height } = Dimensions.get("window");
+export default function HomeScreen({ navigation, route }) {
+  const [safetyStatus, setSafetyStatus] = useState("safe"); // safe, danger, offline
+  const [location, setLocation] = useState("Fetching location...");
+  const [isTracking, setIsTracking] = useState(true);
 
-// Sample data with more details
-const touristPlaces = [
-  {
-    id: "1",
-    name: "Taj Mahal",
-    description:
-      "Iconic white marble mausoleum in Agra, built by Mughal Emperor Shah Jahan.",
-    image:
-      "https://treasuretripin.com/wp-content/uploads/2023/12/SECRETS-TO-EXPERIENCE-IN-TAJ-MAHAL.png",
-    category: "Monument",
-    rating: 4.8,
-    reviews: 12453,
-    price: 50,
-    location: "Agra, Uttar Pradesh",
-    isFavorite: false,
-    images: [
-      "https://treasuretripin.com/wp-content/uploads/2023/12/SECRETS-TO-EXPERIENCE-IN-TAJ-MAHAL.png",
-      "https://cdn.britannica.com/86/170586-050-AB7FEFAE/Taj-Mahal-Agra-India.jpg",
-      "https://www.travelandleisure.com/thmb/7tXXKZPk_0sSXHkK9nFcQkUo1o=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/taj-mahal-agra-india-TAJ0217-9d8a5ddf5f324f8e8b2f2e4e5a7d0f6c.jpg",
-    ],
-  },
-  {
-    id: "2",
-    name: "Gateway of India",
-    description:
-      "Famous monument in Mumbai by the Arabian Sea, built during British rule.",
-    image:
-      "https://i0.wp.com/theunstumbled.com/wp-content/uploads/2025/05/gateway-of-india-mumbai.jpg?fit=1200%2C800&ssl=1",
-    category: "Monument",
-    rating: 4.5,
-    reviews: 8765,
-    price: 0,
-    location: "Mumbai, Maharashtra",
-    isFavorite: false,
-    images: [
-      "https://i0.wp.com/theunstumbled.com/wp-content/uploads/2025/05/gateway-of-india-mumbai.jpg?fit=1200%2C800&ssl=1",
-      "https://www.fabhotels.com/blog/wp-content/uploads/2019/05/Gateway-of-India_600-1280x720.jpg",
-      "https://www.trawell.in/admin/images/upload/461674274Mumbai_Gateway_of_India_Main.jpg",
-    ],
-  },
-  {
-    id: "3",
-    name: "Amarnath Cave",
-    description:
-      "One of the most important pilgrimage sites for Hindus dedicated to Lord Shiva.",
-    image:
-      "https://www.newsonair.gov.in/wp-content/uploads/2025/07/Amarnath-Yatra-2025-1.png",
-    category: "Temple",
-    rating: 4.9,
-    reviews: 15678,
-    price: 0,
-    location: "Pahalgam, Jammu & Kashmir",
-    isFavorite: false,
-    images: [
-      "https://www.newsonair.gov.in/wp-content/uploads/2025/07/Amarnath-Yatra-2025-1.png",
-      "https://www.tourmyindia.com/states/jammuandkashmir/imagess/amarnath-yatra1.jpg",
-      "https://cdn.s3waas.gov.in/s3858a7c5ed8a3c3b5054a0e8bbdc5d236/uploads/2018/06/2018062245.jpg",
-    ],
-  },
-  {
-    id: "4",
-    name: "Shimla",
-    description:
-      "Picturesque hill station with colonial architecture and scenic mountain views.",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsJPH4DqNGlh9MBpJTlzJ5tffn5wq8C8mLxw&s",
-    category: "Mountain",
-    rating: 4.6,
-    reviews: 9876,
-    price: 0,
-    location: "Himachal Pradesh",
-    isFavorite: false,
-    images: [
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTsJPH4DqNGlh9MBpJTlzJ5tffn5wq8C8mLxw&s",
-      "https://www.hlimg.com/images/things2do/738X538/1-1540546551.jpg",
-      "https://www.tourmyindia.com/states/himachal/imagess/shimla2.jpg",
-    ],
-  },
-  {
-    id: "5",
-    name: "Varanasi Ghats",
-    description:
-      "Spiritual capital of India with ancient temples and sacred Ganges river banks.",
-    image:
-      "https://www.andbeyond.com/wp-content/uploads/sites/5/iStock_000058485880_XXXLarge.jpg",
-    category: "Temple",
-    rating: 4.7,
-    reviews: 11234,
-    price: 0,
-    location: "Varanasi, Uttar Pradesh",
-    isFavorite: false,
-    images: [
-      "https://www.oyorooms.com/travel-guide/wp-content/uploads/2019/03/Varanasi-Ghats.jpg",
-      "https://www.fabhotels.com/blog/wp-content/uploads/2019/02/Ghats-in-Varanasi.jpg",
-      "https://static.toiimg.com/photo/77626241.cms",
-    ],
-  },
-  {
-    id: "6",
-    name: "Goa Beaches",
-    description:
-      "Pristine beaches with golden sands, water sports, and vibrant nightlife.",
-    image: "https://www.holidify.com/images/bgImages/GOA.jpg",
-    category: "Beaches",
-    rating: 4.5,
-    reviews: 14567,
-    price: 0,
-    location: "Goa",
-    isFavorite: false,
-    images: [
-      "https://www.holidify.com/images/bgImages/GOA.jpg",
-      "https://www.tourism-of-india.com/blog/wp-content/uploads/2019/12/Beaches-in-Goa.jpg",
-      "https://www.fabhotels.com/blog/wp-content/uploads/2019/05/Beaches-in-Goa_600-1280x720.jpg",
-    ],
-  },
-  {
-    id: "7",
-    name: "DehraDun",
-    description:
-      "One of the most important pilgrimage sites for Hindus dedicated to Lord Shiva.",
-    image:
-      "https://www.manchalamushafir.com/chopta-uttarakhand-unveiling-the-serene-paradise-of-the-himalayas/images/chopta%20image.jpg",
-    category: "Temple",
-    rating: 4.9,
-    reviews: 15678,
-    price: 0,
-    location: "Pahalgam, Jammu & Kashmir",
-    isFavorite: false,
-    images: [
-      "https://www.newsonair.gov.in/wp-content/uploads/2025/07/Amarnath-Yatra-2025-1.png",
-      "https://www.tourmyindia.com/states/jammuandkashmir/imagess/amarnath-yatra1.jpg",
-      "https://cdn.s3waas.gov.in/s3858a7c5ed8a3c3b5054a0e8bbdc5d236/uploads/2018/06/2018062245.jpg",
-    ],
-  },
-];
+  // Get user data from navigation params
+  const userData = route.params?.userData || {};
+  const userName = userData?.name?.split(' ')[0] || "Traveler";
+  const emergencyContacts = userData?.emergencyContacts || [];
 
-const categories = [
-  { id: "1", name: "All", icon: "globe" },
-  { id: "2", name: "Monument", icon: "landmark" },
-  { id: "3", name: "Beaches", icon: "umbrella-beach" },
-  { id: "4", name: "Mountains", icon: "mountain" },
-  { id: "5", name: "Temple", icon: "pray" },
-  { id: "6", name: "Wildlife", icon: "paw" },
-  { id: "7", name: "Heritage", icon: "history" },
-];
-
-export default function HomeScreen({ navigation }) {
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState("popular");
-  const [priceFilter, setPriceFilter] = useState("all");
-  const [favorites, setFavorites] = useState({});
-  
-  // Voice Emergency Detection States
-  const [emergencyModalVisible, setEmergencyModalVisible] = useState(false);
-  const [isListening, setIsListening] = useState(true);
-  const [voiceStatus, setVoiceStatus] = useState("Auto-listening...");
-  const [recording, setRecording] = useState(null);
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const [lastDetectionTime, setLastDetectionTime] = useState(0);
-
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const searchInputRef = useRef(null);
-
-  // Request microphone permission and start listening automatically on component mount
   useEffect(() => {
-    initializeVoiceDetection();
+    // Simulate location fetching
+    const timer = setTimeout(() => {
+      setLocation("Connaught Place, New Delhi");
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const initializeVoiceDetection = async () => {
-    try {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status === 'granted') {
-        setPermissionGranted(true);
-        setVoiceStatus("Auto-listening for emergencies");
-        await startListening();
-      } else {
-        setVoiceStatus("Microphone permission required");
-        // Auto-request permission again after 5 seconds
-        setTimeout(initializeVoiceDetection, 5000);
+  const quickActions = [
+    {
+      id: "1",
+      name: "Share Live Location",
+      icon: "location",
+      color: "#D4105D",
+      onPress: () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        Alert.alert("Share Location", "Live location sharing activated for 1 hour");
       }
-    } catch (error) {
-      console.error('Permission error:', error);
-      setVoiceStatus("Permission error - retrying...");
-      setTimeout(initializeVoiceDetection, 5000);
-    }
-  };
-
-  const startListening = async () => {
-    if (!permissionGranted) return;
-
-    try {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
-        staysActiveInBackground: true,
-      });
-
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      
-      setRecording(recording);
-      setIsListening(true);
-      setVoiceStatus("Auto-listening for emergencies");
-      
-      // Start continuous emergency detection simulation
-      startContinuousDetection();
-
-    } catch (error) {
-      console.error('Failed to start recording', error);
-      setVoiceStatus("Failed to start - retrying...");
-      // Auto-retry after 3 seconds
-      setTimeout(startListening, 3000);
-    }
-  };
-
-  const stopListening = async () => {
-    try {
-      if (recording) {
-        await recording.stopAndUnloadAsync();
-        setRecording(null);
+    },
+    {
+      id: "2",
+      name: "Call Emergency",
+      icon: "call",
+      color: "#D4105D",
+      onPress: () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        Alert.alert("Emergency Call", "Calling primary emergency contact...");
       }
-      setIsListening(false);
-      setVoiceStatus("Voice detection stopped");
-    } catch (error) {
-      console.error('Failed to stop recording', error);
-    }
-  };
-
-  const startContinuousDetection = () => {
-    // Continuous emergency detection simulation
-    const continuousDetection = () => {
-      if (isListening && !emergencyModalVisible) {
-        // Simulate random emergency detection
-        const detectionProbability = 0.08; // 8% chance every check
-        
-        if (Math.random() < detectionProbability) {
-          // Prevent multiple detections within 30 seconds
-          const currentTime = Date.now();
-          if (currentTime - lastDetectionTime > 30000) {
-            setLastDetectionTime(currentTime);
-            handleEmergencyDetected();
-          }
-        }
-        
-        // Continue checking every 3-8 seconds randomly
-        const nextCheck = 3000 + Math.random() * 5000;
-        setTimeout(continuousDetection, nextCheck);
+    },
+    {
+      id: "3",
+      name: "Nearest Safe Place",
+      icon: "navigate",
+      color: "#D4105D",
+      onPress: () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        navigation.navigate("SafePlaces");
       }
-    };
-
-    continuousDetection();
-  };
-
-  const handleEmergencyDetected = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    setIsListening(false);
-    setEmergencyModalVisible(true);
-    
-    if (recording) {
-      stopListening();
-    }
-    
-    // Voice alert
-    Speech.speak('Emergency detected! Please check your phone.', {
-      language: 'en',
-      pitch: 1.1,
-      rate: 0.9,
-    });
-  };
-
-  const handleEmergencyYes = async () => {
-    setEmergencyModalVisible(false);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    
-    Speech.speak('Glad you are safe! Voice detection has been restarted.', { 
-      language: 'en',
-      rate: 0.8 
-    });
-    
-    // Restart listening after a delay
-    setTimeout(() => {
-      if (permissionGranted) {
-        startListening();
-      }
-    }, 2000);
-  };
-
-  const handleEmergencyNo = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    
-    // Voice alert
-    Speech.speak('Emergency assistance has been notified. Help is on the way.', {
-      language: 'en',
-      pitch: 1.2,
-      rate: 0.8,
-    });
-
-    Alert.alert(
-      '🚨 Emergency Assistance Activated',
-      'Emergency services have been notified with your location. Help is on the way. Please stay on the line.',
-      [
-        {
-          text: 'OK', 
-          onPress: () => {
-            setEmergencyModalVisible(false);
-            // Restart listening after emergency response
-            setTimeout(() => {
-              if (permissionGranted) {
-                startListening();
-              }
-            }, 5000);
-          }
-        }
-      ],
-      { cancelable: false }
-    );
-  };
-
-  // Manual toggle for testing
-  const toggleVoiceDetection = () => {
-    if (isListening) {
-      stopListening();
-      Alert.alert(
-        "Voice Detection Paused",
-        "Automatic emergency detection has been paused. Tap the mic icon to restart.",
-        [{ text: "OK" }]
-      );
-    } else {
-      startListening();
-    }
-  };
-
-  // Manual test function
-  const triggerTestEmergency = () => {
-    if (!emergencyModalVisible) {
-      const currentTime = Date.now();
-      if (currentTime - lastDetectionTime > 10000) {
-        setLastDetectionTime(currentTime);
-        handleEmergencyDetected();
-      } else {
+    },
+    {
+      id: "4",
+      name: "Safety Mode",
+      icon: "shield",
+      color: "#D4105D",
+      onPress: () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setIsTracking(!isTracking);
         Alert.alert(
-          "Test Cooldown",
-          "Please wait a few seconds before testing again.",
-          [{ text: "OK" }]
+          isTracking ? "Safety Mode Paused" : "Safety Mode Active",
+          isTracking 
+            ? "Background tracking and monitoring paused"
+            : "Background tracking and monitoring activated"
         );
       }
     }
+  ];
+
+  const safetyTips = [
+    {
+      id: "1",
+      title: "Stay Alert in Crowds",
+      description: "Keep your belongings secure and be aware of your surroundings in crowded areas.",
+      icon: "people"
+    },
+    {
+      id: "2",
+      title: "Emergency Contacts Ready",
+      description: `You have ${emergencyContacts.length} emergency contact${emergencyContacts.length !== 1 ? 's' : ''} set up.`,
+      icon: "contacts"
+    },
+    {
+      id: "3",
+      title: "Share Your Itinerary",
+      description: "Let someone know your travel plans and expected return time.",
+      icon: "calendar"
+    }
+  ];
+
+  const getStatusIcon = () => {
+    switch(safetyStatus) {
+      case "safe": return { icon: "checkmark-circle", color: "#27AE60", text: "You're Safe" };
+      case "danger": return { icon: "warning", color: "#FF3B30", text: "Emergency Mode" };
+      case "offline": return { icon: "cloud-offline", color: "#666", text: "Offline Mode" };
+      default: return { icon: "checkmark-circle", color: "#27AE60", text: "You're Safe" };
+    }
   };
 
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [220, 120],
-    extrapolate: "clamp",
-  });
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0.9],
-    extrapolate: "clamp",
-  });
-
-  const filteredPlaces = touristPlaces.filter((place) => {
-    const matchesCategory =
-      selectedCategory === "All" || place.category === selectedCategory;
-    const matchesSearch =
-      place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      place.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPrice =
-      priceFilter === "all" ||
-      (priceFilter === "free" && place.price === 0) ||
-      (priceFilter === "paid" && place.price > 0);
-
-    return matchesCategory && matchesSearch && matchesPrice;
-  });
-
-  const sortedPlaces = [...filteredPlaces].sort((a, b) => {
-    if (sortBy === "popular") return b.rating - a.rating;
-    if (sortBy === "name") return a.name.localeCompare(b.name);
-    if (sortBy === "reviews") return b.reviews - a.reviews;
-    return 0;
-  });
-
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1500);
-  }, []);
-
-  const toggleFavorite = (id) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setFavorites((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-  const handleCategorySelect = (category) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedCategory(category);
-  };
-
-  const applyFilters = (sort, price) => {
-    setSortBy(sort);
-    setPriceFilter(price);
-    setShowFilters(false);
-  };
-
-  const renderCategory = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.categoryItem,
-        selectedCategory === item.name && styles.selectedCategory,
-      ]}
-      onPress={() => handleCategorySelect(item.name)}
-      activeOpacity={0.7}
-    >
-      <FontAwesome5
-        name={item.icon}
-        size={16}
-        color={selectedCategory === item.name ? "#fff" : "#03474f"}
-      />
-      <Text
-        style={[
-          styles.categoryText,
-          selectedCategory === item.name && styles.selectedCategoryText,
-        ]}
-      >
-        {item.name}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const renderPlace = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate("PlaceDetail", { place: item })}
-      activeOpacity={0.9}
-    >
-      <Image source={{ uri: item.image }} style={styles.cardImage} />
-      <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.8)"]}
-        style={styles.imageGradient}
-      />
-
-      <TouchableOpacity
-        style={styles.favoriteButton}
-        onPress={() => toggleFavorite(item.id)}
-      >
-        <Ionicons
-          name={favorites[item.id] ? "heart" : "heart-outline"}
-          size={22}
-          color={favorites[item.id] ? "#ff4757" : "#fff"}
-        />
-      </TouchableOpacity>
-
-      <View style={styles.cardBadge}>
-        <Text style={styles.badgeText}>{item.category}</Text>
-      </View>
-
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        <View style={styles.cardDetails}>
-          <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={styles.ratingText}>{item.rating}</Text>
-            <Text style={styles.reviewsText}>
-              ({item.reviews.toLocaleString()})
-            </Text>
-          </View>
-
-          <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={12} color="#fff" />
-            <Text style={styles.locationText}>
-              {item.location.split(",")[0]}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.priceContainer}>
-          {item.price > 0 ? (
-            <Text style={styles.priceText}>₹{item.price}</Text>
-          ) : (
-            <Text style={styles.freeText}>Free Entry</Text>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Feather name="search" size={48} color="#cbd5e1" />
-      <Text style={styles.emptyText}>No places found</Text>
-      <Text style={styles.emptySubText}>
-        Try adjusting your search or filters
-      </Text>
-    </View>
-  );
+  const status = getStatusIcon();
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <StatusBar barStyle="light-content" backgroundColor="#03474f" />
-
-      {/* Voice Status Indicator */}
-      <View style={styles.voiceStatusContainer}>
-        <TouchableOpacity 
-          style={[
-            styles.voiceStatus, 
-            isListening ? styles.voiceStatusListening : styles.voiceStatusPaused
-          ]}
-          onPress={toggleVoiceDetection}
-        >
-          <Ionicons 
-            name={isListening ? "mic" : "mic-off"} 
-            size={16} 
-            color="#fff" 
-          />
-          <Text style={styles.voiceStatusText}>{voiceStatus}</Text>
-        </TouchableOpacity>
-        
-        {/* Test emergency button */}
-        <TouchableOpacity 
-          style={styles.testEmergencyButton}
-          onPress={triggerTestEmergency}
-        >
-          <Ionicons name="warning" size={14} color="#fff" />
-          <Text style={styles.testEmergencyText}>Test</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Animated.View
-        style={[
-          styles.header,
-          { height: headerHeight, opacity: headerOpacity },
-        ]}
-      >
-        <LinearGradient
-          colors={["#03474f", "#026873"]}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <View style={styles.headerContent}>
-          <Text style={styles.greeting}>Discover India</Text>
-          <Text style={styles.subGreeting}>
-            Explore the beauty of incredible India
-          </Text>
-
-          <View style={styles.searchContainer}>
-            <Ionicons
-              name="search"
-              size={20}
-              color="#64748b"
-              style={styles.searchIcon}
-            />
-            <TextInput
-              ref={searchInputRef}
-              placeholder="Search places..."
-              placeholderTextColor="#64748b"
-              style={styles.searchInput}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={20} color="#64748b" />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={styles.filterButton}
-              onPress={() => setShowFilters(true)}
-            >
-              <Feather name="filter" size={20} color="#03474f" />
-            </TouchableOpacity>
-          </View>
+      <StatusBar backgroundColor="#D4105D" barStyle="light-content" />
+      
+      {/* Top Bar */}
+      <View style={styles.topBar}>
+        <View style={styles.logoContainer}>
+          <Ionicons name="shield" size={24} color="#fff" />
+          <Text style={styles.logoText}>Kavach</Text>
         </View>
-      </Animated.View>
-
-      <View style={styles.categoriesContainer}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={categories}
-          renderItem={renderCategory}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.categoriesList}
-        />
-      </View>
-
-      <View style={styles.resultsHeader}>
-        <Text style={styles.resultsText}>
-          {sortedPlaces.length} {sortedPlaces.length === 1 ? "Place" : "Places"}{" "}
-          Found
-        </Text>
-        <TouchableOpacity onPress={() => setShowFilters(true)}>
-          <Text style={styles.filterText}>Sort & Filter</Text>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={() => navigation.navigate("Profile")}
+        >
+          <Ionicons name="person-circle" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      <Animated.FlatList
-        data={sortedPlaces}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPlace}
-        contentContainerStyle={styles.grid}
-        numColumns={2}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
+      <ScrollView 
+        style={styles.container}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#03474f"
-          />
-        }
-        ListEmptyComponent={renderEmptyState}
-      />
-
-      {/* Emergency Detection Modal */}
-      <Modal
-        visible={emergencyModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => {}}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.emergencyModalOverlay}>
-          <View style={styles.emergencyModalContent}>
-            <View style={styles.emergencyIcon}>
-              <Ionicons name="warning" size={48} color="#ff3b30" />
+        {/* User Greeting & Safety Status */}
+        <View style={styles.statusCard}>
+          <LinearGradient
+            colors={["#D4105D", "#B80D52"]}
+            style={styles.statusGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <View style={styles.greetingSection}>
+              <View>
+                <Text style={styles.greeting}>Hi, {userName} 👋</Text>
+                <Text style={styles.statusText}>{status.text}</Text>
+              </View>
+              <Ionicons name={status.icon} size={32} color={status.color} />
             </View>
             
-            <Text style={styles.emergencyTitle}>Emergency Detected!</Text>
-            
-            <Text style={styles.emergencyMessage}>
-              Voice detection detected emergency keywords like "help" or "save me".{'\n'}Are you safe?
-            </Text>
-            
-            <View style={styles.emergencyButtonContainer}>
-              <TouchableOpacity 
-                style={[styles.emergencyButton, styles.yesButton]}
-                onPress={handleEmergencyYes}
-              >
-                <Text style={styles.emergencyButtonText}>Yes, I'm Safe</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.emergencyButton, styles.noButton]}
-                onPress={handleEmergencyNo}
-              >
-                <Text style={styles.emergencyButtonText}>No, Help Me</Text>
-              </TouchableOpacity>
+            <View style={styles.locationSection}>
+              <Ionicons name="location" size={16} color="#fff" />
+              <Text style={styles.locationText}>{location}</Text>
+              <View style={[
+                styles.trackingIndicator,
+                { backgroundColor: isTracking ? "#27AE60" : "#666" }
+              ]}>
+                <Text style={styles.trackingText}>
+                  {isTracking ? "LIVE" : "PAUSED"}
+                </Text>
+              </View>
             </View>
-            
-            <Text style={styles.emergencyNote}>
-              The app will remain frozen until you respond
-            </Text>
+          </LinearGradient>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActionsSection}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsGrid}>
+            {quickActions.map((action) => (
+              <TouchableOpacity
+                key={action.id}
+                style={styles.quickAction}
+                onPress={action.onPress}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
+                  <Ionicons name={action.icon} size={24} color="#fff" />
+                </View>
+                <Text style={styles.actionText}>{action.name}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
-      </Modal>
 
-      {/* Filters Modal */}
-      <Modal
-        visible={showFilters}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowFilters(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowFilters(false)}>
-          <View style={styles.modalOverlay} />
-        </TouchableWithoutFeedback>
-
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Sort & Filter</Text>
-            <TouchableOpacity onPress={() => setShowFilters(false)}>
-              <Ionicons name="close" size={24} color="#03474f" />
+        {/* Safety Tips */}
+        <View style={styles.tipsSection}>
+          <Text style={styles.sectionTitle}>Safety Tips</Text>
+          {safetyTips.map((tip) => (
+            <TouchableOpacity key={tip.id} style={styles.tipCard} activeOpacity={0.7}>
+              <View style={styles.tipIcon}>
+                <Ionicons name={tip.icon} size={20} color="#D4105D" />
+              </View>
+              <View style={styles.tipContent}>
+                <Text style={styles.tipTitle}>{tip.title}</Text>
+                <Text style={styles.tipDescription}>{tip.description}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color="#666" />
             </TouchableOpacity>
-          </View>
+          ))}
+        </View>
 
-          <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Sort By</Text>
-            <View style={styles.filterOptions}>
-              {["popular", "name", "reviews"].map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={[
-                    styles.filterOption,
-                    sortBy === option && styles.selectedFilterOption,
-                  ]}
-                  onPress={() => setSortBy(option)}
+        {/* Emergency Contacts Preview */}
+        {emergencyContacts.length > 0 && (
+          <View style={styles.contactsSection}>
+            <Text style={styles.sectionTitle}>Emergency Contacts</Text>
+            <View style={styles.contactsPreview}>
+              {emergencyContacts.slice(0, 2).map((contact, index) => (
+                <View key={index} style={styles.contactItem}>
+                  <View style={styles.contactAvatar}>
+                    <Text style={styles.contactInitial}>
+                      {contact.name?.charAt(0)?.toUpperCase() || "C"}
+                    </Text>
+                  </View>
+                  <View style={styles.contactInfo}>
+                    <Text style={styles.contactName}>{contact.name}</Text>
+                    <Text style={styles.contactNumber}>{contact.number}</Text>
+                  </View>
+                </View>
+              ))}
+              {emergencyContacts.length > 2 && (
+                <TouchableOpacity 
+                  style={styles.moreContacts}
+                  onPress={() => navigation.navigate("EmergencyContacts")}
                 >
-                  <Text
-                    style={[
-                      styles.filterOptionText,
-                      sortBy === option && styles.selectedFilterOptionText,
-                    ]}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  <Text style={styles.moreContactsText}>
+                    +{emergencyContacts.length - 2} more
                   </Text>
                 </TouchableOpacity>
-              ))}
+              )}
             </View>
           </View>
+        )}
 
-          <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Price</Text>
-            <View style={styles.filterOptions}>
-              {["all", "free", "paid"].map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={[
-                    styles.filterOption,
-                    priceFilter === option && styles.selectedFilterOption,
-                  ]}
-                  onPress={() => setPriceFilter(option)}
-                >
-                  <Text
-                    style={[
-                      styles.filterOptionText,
-                      priceFilter === option && styles.selectedFilterOptionText,
-                    ]}
-                  >
-                    {option === "all"
-                      ? "All"
-                      : option === "free"
-                        ? "Free"
-                        : "Paid"}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.applyButton}
-            onPress={() => applyFilters(sortBy, priceFilter)}
+        {/* Digital ID Preview */}
+        <View style={styles.digitalIdSection}>
+          <Text style={styles.sectionTitle}>Your Digital ID</Text>
+          <TouchableOpacity 
+            style={styles.digitalIdCard}
+            onPress={() => navigation.navigate("DigitalID")}
+            activeOpacity={0.8}
           >
-            <Text style={styles.applyButtonText}>Apply Filters</Text>
+            <LinearGradient
+              colors={["#FFE8F0", "#fff"]}
+              style={styles.digitalIdGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.digitalIdHeader}>
+                <Ionicons name="id-card" size={24} color="#D4105D" />
+                <Text style={styles.digitalIdTitle}>Kavach Digital ID</Text>
+              </View>
+              <View style={styles.digitalIdContent}>
+                <Text style={styles.digitalIdName}>{userData?.name || "Tourist User"}</Text>
+                <Text style={styles.digitalIdType}>
+                  {route.params?.profile?.title || "Traveler"} Profile
+                </Text>
+              </View>
+              <View style={styles.digitalIdFooter}>
+                <Text style={styles.digitalIdText}>Tap to view full ID</Text>
+                <Ionicons name="qr-code" size={20} color="#D4105D" />
+              </View>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
-      </Modal>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -782,423 +276,295 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#f8f9fa",
   },
-  // Voice Status Styles
-  voiceStatusContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 40,
-    right: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  voiceStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-    marginRight: 8,
-  },
-  voiceStatusListening: {
-    backgroundColor: '#22c55e',
-  },
-  voiceStatusPaused: {
-    backgroundColor: '#64748b',
-  },
-  voiceStatusText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  testEmergencyButton: {
-    backgroundColor: '#f59e0b',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  testEmergencyText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  // Emergency Modal Styles
-  emergencyModalOverlay: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  emergencyModalContent: {
-    backgroundColor: 'white',
-    borderRadius: 24,
-    padding: 30,
-    alignItems: 'center',
-    shadowColor: '#000',
+  scrollContent: {
+    paddingBottom: 30,
+  },
+  // Top Bar
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#D4105D",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 12 : 12,
+  },
+  logoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+  profileButton: {
+    padding: 4,
+  },
+  // Status Card
+  statusCard: {
+    margin: 20,
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
-    width: '85%',
-  },
-  emergencyIcon: {
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-    padding: 20,
-    borderRadius: 50,
-    marginBottom: 20,
-  },
-  emergencyTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#ff3b30',
-    textAlign: 'center',
-  },
-  emergencyMessage: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 22,
-    color: '#333',
-  },
-  emergencyButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 20,
-  },
-  emergencyButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    marginHorizontal: 6,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  yesButton: {
-    backgroundColor: '#4CAF50',
-  },
-  noButton: {
-    backgroundColor: '#ff3b30',
-  },
-  emergencyButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  emergencyNote: {
-    fontSize: 12,
-    color: '#64748b',
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  // Original styles
-  header: {
-    backgroundColor: "#03474f",
+  statusGradient: {
     padding: 20,
-    justifyContent: "flex-end",
-    overflow: "hidden",
   },
-  headerContent: {
-    zIndex: 1,
+  greetingSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 15,
   },
   greeting: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
     marginBottom: 4,
   },
-  subGreeting: {
-    fontSize: 16,
-    color: "#e2e8f0",
-    marginBottom: 20,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 50,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: "100%",
-    fontSize: 16,
-    color: "#0f172a",
-  },
-  filterButton: {
-    backgroundColor: "#e2e8f0",
-    padding: 6,
-    borderRadius: 8,
-    marginLeft: 8,
-  },
-  categoriesContainer: {
-    marginVertical: 16,
-  },
-  categoriesList: {
-    paddingHorizontal: 16,
-  },
-  categoryItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  selectedCategory: {
-    backgroundColor: "#03474f",
-  },
-  categoryText: {
-    marginLeft: 8,
-    color: "#03474f",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  selectedCategoryText: {
-    color: "#fff",
-  },
-  resultsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  resultsText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#334155",
-  },
-  filterText: {
-    fontSize: 14,
-    color: "#03474f",
-    fontWeight: "600",
-  },
-  grid: {
-    padding: 8,
-    paddingBottom: 20,
-  },
-  card: {
-    backgroundColor: "#fff",
-    flex: 1,
-    margin: 8,
-    borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardImage: {
-    width: "100%",
-    height: 150,
-  },
-  imageGradient: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: "50%",
-  },
-  favoriteButton: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    borderRadius: 20,
-    padding: 6,
-  },
-  cardBadge: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeText: {
-    color: "#03474f",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  cardContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 12,
-  },
-  cardTitle: {
-    fontWeight: "700",
+  statusText: {
     fontSize: 16,
     color: "#fff",
-    marginBottom: 6,
+    opacity: 0.9,
   },
-  cardDetails: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  ratingText: {
-    marginLeft: 4,
-    fontWeight: "600",
-    color: "#fff",
-    fontSize: 12,
-  },
-  reviewsText: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 11,
-    marginLeft: 4,
-  },
-  locationContainer: {
+  locationSection: {
     flexDirection: "row",
     alignItems: "center",
   },
   locationText: {
-    color: "rgba(255,255,255,0.9)",
-    fontSize: 11,
-    marginLeft: 4,
+    color: "#fff",
+    marginLeft: 6,
+    marginRight: 12,
+    fontSize: 14,
+    flex: 1,
   },
-  priceContainer: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.9)",
+  trackingIndicator: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
-  priceText: {
-    color: "#03474f",
-    fontWeight: "700",
-    fontSize: 12,
+  trackingText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
   },
-  freeText: {
-    color: "#22c55e",
-    fontWeight: "700",
-    fontSize: 12,
+  // Quick Actions
+  quickActionsSection: {
+    marginHorizontal: 20,
+    marginBottom: 25,
   },
-  emptyContainer: {
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#262626",
+    marginBottom: 16,
+  },
+  quickActionsGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  quickAction: {
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#64748b",
-    marginTop: 16,
-  },
-  emptySubText: {
-    fontSize: 14,
-    color: "#94a3b8",
-    marginTop: 8,
-  },
-  modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    marginHorizontal: 6,
   },
-  modalContent: {
+  actionIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  actionText: {
+    fontSize: 12,
+    color: "#262626",
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  // Safety Tips
+  tipsSection: {
+    marginHorizontal: 20,
+    marginBottom: 25,
+  },
+  tipCard: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: Platform.OS === "ios" ? 40 : 20,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
   },
-  modalHeader: {
+  tipIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFE8F0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  tipContent: {
+    flex: 1,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#262626",
+    marginBottom: 4,
+  },
+  tipDescription: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 18,
+  },
+  // Contacts Section
+  contactsSection: {
+    marginHorizontal: 20,
+    marginBottom: 25,
+  },
+  contactsPreview: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  contactItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  contactAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#D4105D",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  contactInitial: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  contactInfo: {
+    flex: 1,
+  },
+  contactName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#262626",
+    marginBottom: 2,
+  },
+  contactNumber: {
+    fontSize: 14,
+    color: "#666",
+  },
+  moreContacts: {
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  moreContactsText: {
+    color: "#D4105D",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  // Digital ID Section
+  digitalIdSection: {
+    marginHorizontal: 20,
+  },
+  digitalIdCard: {
+    borderRadius: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  digitalIdGradient: {
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#FFE8F0",
+  },
+  digitalIdHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  digitalIdTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#262626",
+    marginLeft: 10,
+  },
+  digitalIdContent: {
+    marginBottom: 15,
+  },
+  digitalIdName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#262626",
+    marginBottom: 4,
+  },
+  digitalIdType: {
+    fontSize: 16,
+    color: "#D4105D",
+    fontWeight: "600",
+  },
+  digitalIdFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 24,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  filterSection: {
-    marginBottom: 24,
-  },
-  filterSectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#334155",
-    marginBottom: 12,
-  },
-  filterOptions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  filterOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#f1f5f9",
-  },
-  selectedFilterOption: {
-    backgroundColor: "#03474f",
-  },
-  filterOptionText: {
-    color: "#64748b",
+  digitalIdText: {
+    fontSize: 14,
+    color: "#666",
     fontWeight: "500",
-  },
-  selectedFilterOptionText: {
-    color: "#fff",
-  },
-  applyButton: {
-    backgroundColor: "#03474f",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  applyButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
   },
 });

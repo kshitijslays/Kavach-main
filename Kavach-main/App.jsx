@@ -17,6 +17,7 @@ import TripDetails from "./screens/TripDetails.jsx";
 import DigitalId from "./screens/DigitalId.jsx";
 import HomePage from "./screens/HomePage.jsx";
 import TabNavigator from "./navigations/TabNavigator.jsx";
+import MovementDetector from "./screens/MovementDetector.js"
 import VoiceAlert from "./screens/VoiceAlert.js";
 // import PoliceDashboard from "./screens/PolicDashboard.js";
 
@@ -25,6 +26,7 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
+      <MovementDetector />
       <Stack.Navigator
         initialRouteName="RoleSelection"
         screenOptions={{
@@ -41,8 +43,8 @@ export default function App() {
           name="VerificationSuccess"
           component={VerificationSuccess}
         />
-        <Stack.Screen name="TravelProfile" component={TravelProfileScreen} />
-        <Stack.Screen name="KYCSimulation" component={KycSimulation} />
+        <Stack.Screen name="TravelProfile" component={KycSimulation} />
+        <Stack.Screen name="KYCSimulation" component={TripDetails} />
         <Stack.Screen name="TripDetails" component={TripDetails} />
         <Stack.Screen name="DigitalID" component={DigitalId} />
         <Stack.Screen name="Home" component={TabNavigator} />

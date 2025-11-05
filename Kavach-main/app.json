@@ -8,25 +8,34 @@
     "scheme": "myapptwo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
     "ios": {
       "supportsTablet": true
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-       "permissions": [
+      "permissions": [
+        "ACCESS_FINE_LOCATION",           
+        "ACCESS_COARSE_LOCATION",         
+        "FOREGROUND_SERVICE",             
         "RECORD_AUDIO",
         "MODIFY_AUDIO_SETTINGS",
-        "INTERNET"
+        "INTERNET",
+        "CAMERA"
       ],
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.MyAppTwo"
     },
+
     "web": {
       "bundler": "metro",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       [
         "expo-splash-screen",
@@ -40,6 +49,12 @@
         "expo-camera",
         {
           "cameraPermission": "Allow Suraksha Kavach to access your camera to scan QR codes."
+        }
+      ],
+      [
+        "expo-location",                  
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Suraksha Kavach to access your location for safety and emergency features."
         }
       ]
     ]

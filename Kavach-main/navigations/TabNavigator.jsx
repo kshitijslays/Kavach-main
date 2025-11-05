@@ -21,8 +21,8 @@ export default function TabNavigator() {
             case 'Home':
               iconName = focused ? 'home' : 'home-outline';
               break;
-            case '360deg':
-              iconName = focused ? 'compass' : 'compass-outline';
+            case 'LiveLocation':
+              iconName = focused ? 'location' : 'location-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -36,7 +36,7 @@ export default function TabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#03474f',
+        tabBarActiveTintColor: '#d4105d',
         tabBarInactiveTintColor: 'gray',
         tabBarStyle: {
           backgroundColor: '#fff',
@@ -60,10 +60,10 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="360deg" 
+        name="LiveLocation" 
         component={ThreeSixtyDeg}
         options={{
-          tabBarLabel: '360°'
+          tabBarLabel: 'Live Location'
         }}
       />
       <Tab.Screen 

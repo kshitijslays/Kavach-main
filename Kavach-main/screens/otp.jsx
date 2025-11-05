@@ -11,16 +11,20 @@ import {
   Alert,
   Animated,
   Easing,
-  ActivityIndicator
+  ActivityIndicator,
+  Dimensions
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { authAPI } from '../services/api';
+
+const { width } = Dimensions.get('window');
 
 export default function OTPScreen({ navigation, route }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(30);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const inputRefs = useRef([]);
   const shakeAnimation = new Animated.Value(0);
   const email = route.params?.email || "";
@@ -71,6 +75,14 @@ export default function OTPScreen({ navigation, route }) {
     }
   };
 
+  const handleFocus = (index) => {
+    setFocusedIndex(index);
+  };
+
+  const handleBlur = () => {
+    setFocusedIndex(-1);
+  };
+
   const handleNext = async () => {
     const enteredOtp = otp.join("");
     if (enteredOtp.length === 6 && !loading) {
@@ -81,9 +93,6 @@ export default function OTPScreen({ navigation, route }) {
         console.log('🔐 Verifying OTP:', enteredOtp, 'for email:', email);
         const data = await authAPI.verifyOTP(email, enteredOtp);
         console.log('✅ OTP verification response:', data);
-        
-        // Store the token for future API calls
-        // await AsyncStorage.setItem('userToken', data.token);
         
         // Check if it's a duplicate request message
         if (data.message?.includes('already in progress')) {
@@ -194,7 +203,7 @@ export default function OTPScreen({ navigation, route }) {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#03474f" />
+            <Ionicons name="arrow-back" size={24} color="#262626" />
           </TouchableOpacity>
           <Text style={styles.title}>OTP Verification</Text>
           <View style={styles.placeholder} />
@@ -202,18 +211,18 @@ export default function OTPScreen({ navigation, route }) {
 
         <View style={styles.content}>
           <View style={styles.iconContainer}>
-            <Ionicons name="lock-closed" size={50} color="#03474f" />
+            <Ionicons name="lock-closed" size={50} color="#D4105D" />
           </View>
           
           <Text style={styles.subtitle}>
-            Enter the verification code
+            Enter Verification Code
           </Text>
           
           <Text style={styles.message}>
-            We've sent a 6-digit code to your registered email
+            We've sent a 6-digit verification code to your email address
           </Text>
           
-          <Text style={styles.mobileText}>
+          <Text style={styles.emailText}>
             {email}
           </Text>
 
@@ -221,10 +230,16 @@ export default function OTPScreen({ navigation, route }) {
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
-                style={[styles.otpInput, digit && styles.otpInputFilled]}
+                style={[
+                  styles.otpInput,
+                  digit && styles.otpInputFilled,
+                  focusedIndex === index && styles.otpInputFocused
+                ]}
                 value={digit}
                 onChangeText={(value) => handleOtpChange(value, index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
+                onFocus={() => handleFocus(index)}
+                onBlur={handleBlur}
                 keyboardType="number-pad"
                 maxLength={1}
                 ref={(ref) => inputRefs.current[index] = ref}
@@ -234,7 +249,10 @@ export default function OTPScreen({ navigation, route }) {
           </Animated.View>
 
           <TouchableOpacity 
-            style={[styles.button, (otp.join("").length !== 6 || loading) && styles.buttonDisabled]}
+            style={[
+              styles.button, 
+              (otp.join("").length !== 6 || loading) && styles.buttonDisabled
+            ]}
             onPress={handleNext}
             disabled={otp.join("").length !== 6 || loading}
           >
@@ -243,17 +261,17 @@ export default function OTPScreen({ navigation, route }) {
             ) : (
               <>
                 <Text style={styles.buttonText}>Verify & Continue</Text>
-                <Ionicons name="arrow-forward" size={20} color="#fff" />
+                <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
               </>
             )}
           </TouchableOpacity>
 
           <View style={styles.resendContainer}>
             <Text style={styles.timerText}>
-              Didn't receive the code? 
+              Didn't receive the code?{" "}
             </Text>
             {isResendDisabled ? (
-              <Text style={styles.timerText}>
+              <Text style={styles.timerCount}>
                 Resend in 00:{timer < 10 ? `0${timer}` : timer}
               </Text>
             ) : (
@@ -266,7 +284,9 @@ export default function OTPScreen({ navigation, route }) {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By continuing, you agree to our{" "}
+            <Text style={styles.highlightText}>Terms of Service</Text> and{" "}
+            <Text style={styles.highlightText}>Privacy Policy</Text>
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -277,7 +297,7 @@ export default function OTPScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#f8f9fa",
   },
   container: {
     flex: 1,
@@ -291,102 +311,169 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 20 : 0,
   },
   backButton: {
-    padding: 5,
+    padding: 8,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   placeholder: {
     width: 24,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#03474f",
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#262626",
   },
   content: {
     flex: 1,
     alignItems: "center",
     paddingHorizontal: 20,
+    justifyContent: "center",
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#E8F4FD",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#FFE8F0",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 25,
+    shadowColor: "#D4105D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   subtitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 10,
-    color: "#03474f",
-  },
-  message: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 5,
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 12,
+    color: "#262626",
     textAlign: "center",
   },
-  mobileText: {
+  message: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 8,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  emailText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#03474f",
-    marginBottom: 30,
+    color: "#D4105D",
+    marginBottom: 40,
+    textAlign: "center",
   },
   otpContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "100%",
-    marginBottom: 30,
+    width: width * 0.8,
+    marginBottom: 35,
   },
   otpInput: {
-    width: 50,
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
+    width: 55,
+    height: 55,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
     textAlign: "center",
-    fontSize: 20,
-    fontWeight: "600",
+    fontSize: 22,
+    fontWeight: "bold",
     backgroundColor: "#fff",
+    color: "#262626",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   otpInputFilled: {
-    borderColor: "#03474f",
-    backgroundColor: "#F0F9FF",
+    borderColor: "#D4105D",
+    backgroundColor: "#FFE8F0",
+    shadowColor: "#D4105D",
+    shadowOpacity: 0.1,
+  },
+  otpInputFocused: {
+    borderColor: "#D4105D",
+    backgroundColor: "#fff",
+    shadowColor: "#D4105D",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#03474f",
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 10,
+    backgroundColor: "#D4105D",
+    paddingVertical: 18,
+    paddingHorizontal: 30,
+    borderRadius: 12,
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 25,
+    shadowColor: "#D4105D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonDisabled: {
-    backgroundColor: "#9aa9b1",
+    backgroundColor: "#ccc",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginRight: 10,
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "bold",
+    marginRight: 8,
+  },
+  buttonIcon: {
+    marginLeft: 4,
   },
   resendContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    flexWrap: "wrap",
   },
   timerText: {
     fontSize: 14,
-    color: "#6B7280",
-    marginRight: 5,
+    color: "#666",
+  },
+  timerCount: {
+    fontSize: 14,
+    color: "#D4105D",
+    fontWeight: "600",
   },
   resendText: {
     fontSize: 14,
-    color: "#03474f",
-    fontWeight: "600",
+    color: "#D4105D",
+    fontWeight: "bold",
+    textDecorationLine: "underline",
   },
   footer: {
     padding: 20,
@@ -395,7 +482,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#666",
     textAlign: "center",
+    lineHeight: 18,
+  },
+  highlightText: {
+    color: "#D4105D",
+    fontWeight: "600",
   },
 });

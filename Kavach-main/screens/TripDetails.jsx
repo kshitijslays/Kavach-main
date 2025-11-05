@@ -12,46 +12,48 @@ import {
   KeyboardAvoidingView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker from '@react-native-community/datetimepicker';
-
-// Import the DigitalId component
-import DigitalId from "./DigitalId";
 
 export default function TripDetailsScreen({ navigation, route }) {
-  const [emergencyName, setEmergencyName] = useState("");
-  const [emergencyNumber, setEmergencyNumber] = useState("");
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
-  const [destination, setDestination] = useState("");
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [emergencyContacts, setEmergencyContacts] = useState([
+    { name: "", number: "" },
+    { name: "", number: "" }
+  ]);
 
   const validateForm = () => {
-    if (!emergencyName.trim()) {
-      Alert.alert("Error", "Please enter emergency contact name");
+    if (!name.trim()) {
+      Alert.alert("Error", "Please enter your full name");
       return false;
     }
-    if (!emergencyNumber.trim() || emergencyNumber.length < 10) {
-      Alert.alert("Error", "Please enter a valid emergency contact number");
+    if (!phone.trim() || phone.length < 10) {
+      Alert.alert("Error", "Please enter a valid phone number");
       return false;
     }
-    if (!destination.trim()) {
-      Alert.alert("Error", "Please enter your destination");
+    
+    // Validate at least one emergency contact
+    const validEmergencyContacts = emergencyContacts.filter(
+      contact => contact.name.trim() && contact.number.trim() && contact.number.length >= 10
+    );
+    
+    if (validEmergencyContacts.length === 0) {
+      Alert.alert("Error", "Please add at least one valid emergency contact");
       return false;
     }
+
     return true;
   };
 
   const handleGenerateID = () => {
     if (validateForm()) {
-      console.log('📝 Trip details completed, generating Digital ID');
+      console.log('📝 User details completed, generating Digital ID');
       navigation.navigate("DigitalID", {
-        tripData: {
-          emergencyName,
-          emergencyNumber,
-          startDate,
-          endDate,
-          destination
+        userData: {
+          name,
+          phone,
+          emergencyContacts: emergencyContacts.filter(
+            contact => contact.name.trim() && contact.number.trim()
+          )
         },
         profile: route.params?.profile,
         selectedProfile: route.params?.selectedProfile,
@@ -60,12 +62,28 @@ export default function TripDetailsScreen({ navigation, route }) {
     }
   };
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+  const updateEmergencyContact = (index, field, value) => {
+    const updatedContacts = [...emergencyContacts];
+    updatedContacts[index] = {
+      ...updatedContacts[index],
+      [field]: value
+    };
+    setEmergencyContacts(updatedContacts);
+  };
+
+  const addEmergencyContact = () => {
+    if (emergencyContacts.length < 4) {
+      setEmergencyContacts([...emergencyContacts, { name: "", number: "" }]);
+    } else {
+      Alert.alert("Maximum Reached", "You can add up to 4 emergency contacts");
+    }
+  };
+
+  const removeEmergencyContact = (index) => {
+    if (emergencyContacts.length > 1) {
+      const updatedContacts = emergencyContacts.filter((_, i) => i !== index);
+      setEmergencyContacts(updatedContacts);
+    }
   };
 
   return (
@@ -74,27 +92,38 @@ export default function TripDetailsScreen({ navigation, route }) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.container}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#03474f" />
-          </TouchableOpacity>
+        <ScrollView 
+          contentContainerStyle={styles.container}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#262626" />
+            </TouchableOpacity>
+            <Text style={styles.title}>Personal Details</Text>
+            <View style={styles.placeholder} />
+          </View>
 
-          <Text style={styles.title}>Trip Details</Text>
-          <Text style={styles.subtitle}>Please fill in your travel information</Text>
+          <Text style={styles.subtitle}>
+            Complete your profile information for your digital ID
+          </Text>
 
+          {/* Personal Information Section */}
           <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Emergency Contact</Text>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
+            
             <View style={styles.inputContainer}>
               <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Emergency Contact Name"
-                value={emergencyName}
-                onChangeText={setEmergencyName}
-                placeholderTextColor="#666"
+                placeholder="Full Name"
+                value={name}
+                onChangeText={setName}
+                placeholderTextColor="#999"
               />
             </View>
 
@@ -102,80 +131,99 @@ export default function TripDetailsScreen({ navigation, route }) {
               <Ionicons name="call-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Emergency Contact Number"
+                placeholder="Phone Number"
                 keyboardType="phone-pad"
-                value={emergencyNumber}
-                onChangeText={setEmergencyNumber}
-                placeholderTextColor="#666"
+                value={phone}
+                onChangeText={setPhone}
+                placeholderTextColor="#999"
                 maxLength={15}
               />
             </View>
           </View>
 
+          {/* Emergency Contacts Section */}
           <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Trip Information</Text>
-            
-            <TouchableOpacity 
-              style={styles.dateContainer}
-              onPress={() => setShowStartPicker(true)}
-            >
-              <Ionicons name="calendar-outline" size={20} color="#666" style={styles.inputIcon} />
-              <Text style={styles.dateText}>Start: {formatDate(startDate)}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.dateContainer}
-              onPress={() => setShowEndPicker(true)}
-            >
-              <Ionicons name="calendar-outline" size={20} color="#666" style={styles.inputIcon} />
-              <Text style={styles.dateText}>End: {formatDate(endDate)}</Text>
-            </TouchableOpacity>
-
-            <View style={styles.inputContainer}>
-              <Ionicons name="location-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Destination"
-                value={destination}
-                onChangeText={setDestination}
-                placeholderTextColor="#666"
-              />
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Emergency Contacts</Text>
+              <Text style={styles.contactCount}>
+                {emergencyContacts.filter(c => c.name || c.number).length}/{emergencyContacts.length}
+              </Text>
             </View>
+            
+            <Text style={styles.sectionDescription}>
+              Add people to contact in case of emergencies (at least one required)
+            </Text>
+
+            {emergencyContacts.map((contact, index) => (
+              <View key={index} style={styles.emergencyContactCard}>
+                <View style={styles.contactHeader}>
+                  <Text style={styles.contactNumber}>Contact {index + 1}</Text>
+                  {emergencyContacts.length > 1 && (
+                    <TouchableOpacity 
+                      style={styles.removeButton}
+                      onPress={() => removeEmergencyContact(index)}
+                    >
+                      <Ionicons name="close-circle" size={20} color="#ff3b30" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+                
+                <View style={styles.inputRow}>
+                  <View style={[styles.inputContainer, styles.contactInput, { flex: 2 }]}>
+                    <Ionicons name="person-outline" size={16} color="#666" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Contact Name"
+                      value={contact.name}
+                      onChangeText={(value) => updateEmergencyContact(index, 'name', value)}
+                      placeholderTextColor="#999"
+                    />
+                  </View>
+                  
+                  <View style={[styles.inputContainer, styles.contactInput, { flex: 2 }]}>
+                    <Ionicons name="call-outline" size={16} color="#666" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Phone Number"
+                      keyboardType="phone-pad"
+                      value={contact.number}
+                      onChangeText={(value) => updateEmergencyContact(index, 'number', value)}
+                      placeholderTextColor="#999"
+                      maxLength={15}
+                    />
+                  </View>
+                </View>
+              </View>
+            ))}
+
+            {emergencyContacts.length < 4 && (
+              <TouchableOpacity 
+                style={styles.addContactButton}
+                onPress={addEmergencyContact}
+              >
+                <Ionicons name="add-circle" size={20} color="#D4105D" />
+                <Text style={styles.addContactText}>Add Another Contact</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
+          {/* Generate Button */}
           <TouchableOpacity 
-            style={styles.generateButton} 
-            onPress={handleGenerateID} // Updated to use the handleGenerateID function
+            style={[
+              styles.generateButton,
+              (!name || !phone || !emergencyContacts.some(c => c.name && c.number)) && styles.generateButtonDisabled
+            ]} 
+            onPress={handleGenerateID}
+            disabled={!name || !phone || !emergencyContacts.some(c => c.name && c.number)}
           >
-            <Ionicons name="shield-checkmark-outline" size={20} color="#fff" />
+            <Ionicons name="id-card" size={22} color="#fff" />
             <Text style={styles.buttonText}>Generate Digital ID</Text>
           </TouchableOpacity>
 
-          {showStartPicker && (
-            <DateTimePicker
-              value={startDate}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowStartPicker(false);
-                if (date) setStartDate(date);
-              }}
-              minimumDate={new Date()}
-            />
-          )}
-
-          {showEndPicker && (
-            <DateTimePicker
-              value={endDate}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowEndPicker(false);
-                if (date) setEndDate(date);
-              }}
-              minimumDate={startDate}
-            />
-          )}
+          <Text style={styles.securityNote}>
+            <Ionicons name="shield-checkmark" size={14} color="#27AE60" />
+            {" "}Your information is encrypted and secure
+          </Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -185,38 +233,71 @@ export default function TripDetailsScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#f8f9fa",
   },
   container: {
     flexGrow: 1,
     padding: 20,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
   backButton: {
     padding: 8,
-    borderRadius: 8,
     backgroundColor: "#fff",
-    alignSelf: 'flex-start',
-    marginBottom: 20,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  placeholder: {
+    width: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#03474f",
-    marginBottom: 8,
+    color: "#262626",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     color: "#666",
     marginBottom: 30,
+    textAlign: "center",
+    lineHeight: 22,
   },
   formSection: {
-    marginBottom: 24,
+    marginBottom: 30,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#262626",
+  },
+  contactCount: {
+    fontSize: 14,
+    color: "#D4105D",
     fontWeight: "600",
-    color: "#03474f",
-    marginBottom: 16,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 20,
+    lineHeight: 20,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -224,47 +305,117 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 16,
-    paddingHorizontal: 12,
-    borderWidth: 1,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
     borderColor: '#E5E7EB',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
   inputIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 16,
     fontSize: 16,
-    color: "#333",
+    color: "#262626",
   },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  emergencyContactCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E5E7EB',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  dateText: {
-    fontSize: 16,
-    color: "#333",
+  contactHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  contactNumber: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#262626",
+  },
+  removeButton: {
+    padding: 4,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  contactInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  addContactButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFE8F0',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#D4105D',
+    borderStyle: 'dashed',
+  },
+  addContactText: {
+    color: "#D4105D",
+    fontWeight: "600",
+    fontSize: 15,
+    marginLeft: 8,
   },
   generateButton: {
-    backgroundColor: "#03474f",
-    padding: 16,
+    backgroundColor: "#D4105D",
+    padding: 18,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 16,
+    shadowColor: "#D4105D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  generateButtonDisabled: {
+    backgroundColor: "#ccc",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
-    marginLeft: 8,
+    fontSize: 17,
+    marginLeft: 10,
+  },
+  securityNote: {
+    fontSize: 14,
+    color: "#27AE60",
+    textAlign: "center",
+    fontWeight: "500",
   },
 });

@@ -1,276 +1,373 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   View, 
   Text, 
-  TouchableOpacity, 
-  FlatList,
-  StyleSheet,
-  Modal,
+  StyleSheet, 
   ActivityIndicator,
-  RefreshControl,
-  Alert
+  TouchableOpacity,
+  Alert,
+  Platform,
+  Linking
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
-import QRCode from 'react-native-qrcode-svg';
-import { Camera } from 'expo-camera';
 import * as Location from 'expo-location';
+import { Ionicons } from "@expo/vector-icons";
 
-// ...existing mockBlockchainData...
-
-export default function PoliceVerificationDashboard() {
-  const navigation = useNavigation();
-  const [tourists, setTourists] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedTourist, setSelectedTourist] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [scannerVisible, setScannerVisible] = useState(false);
-  const [hasPermission, setHasPermission] = useState(null);
+// Web-compatible version
+function LiveLocationWeb() {
   const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
-    (async () => {
-      // Request camera permission
-      const { status } = await Camera.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
-
-      // Request location permission
-      let { status: locationStatus } = await Location.requestForegroundPermissionsAsync();
-      if (locationStatus === 'granted') {
-        let location = await Location.getCurrentPositionAsync({});
-        setLocation(location);
-      }
-    })();
-
-    fetchTourists();
+    if (Platform.OS === 'web') {
+      getWebLocation();
+    }
   }, []);
 
-  const fetchTourists = async () => {
-    try {
-      setLoading(true);
-      // In real app, fetch from blockchain
-      setTourists(mockBlockchainData);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to fetch tourist data');
-    } finally {
+  const getWebLocation = () => {
+    if (!navigator.geolocation) {
+      setErrorMsg('Geolocation is not supported by this browser');
       setLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          coords: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          }
+        });
+        setLoading(false);
+      },
+      (error) => {
+        setErrorMsg('Error getting location: ' + error.message);
+        setLoading(false);
+      }
+    );
+  };
+
+  const openInGoogleMaps = () => {
+    if (location) {
+      const { latitude, longitude } = location.coords;
+      const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      Linking.openURL(url);
     }
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchTourists().finally(() => setRefreshing(false));
-  }, []);
-
-  const handleScan = async ({ data }) => {
-    try {
-      setScannerVisible(false);
-      setLoading(true);
-      
-      // Verify on blockchain
-      const verificationResult = await BlockchainService.verifyTourist(data);
-      
-      if (verificationResult) {
-        const tourist = tourists.find(t => t.qrHash === data);
-        if (tourist) {
-          // Log verification with location
-          await BlockchainService.logVerification(
-            data,
-            'OFFICER_ID', // Replace with actual officer ID
-            location
-          );
-          verifyTouristID(tourist);
-        }
-      } else {
-        Alert.alert('Invalid QR', 'This QR code is not registered in the system');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Verification failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ...existing renderTouristCard...
-
-  const VerificationModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={() => setModalVisible(false)}
-          >
-            <Ionicons name="close" size={24} color="#666" />
-          </TouchableOpacity>
-
-          {selectedTourist && (
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.qrContainer}>
-                <QRCode
-                  value={selectedTourist.qrHash}
-                  size={200}
-                  color="#03474f"
-                  backgroundColor="white"
-                  logoBackgroundColor="white"
-                />
-              </View>
-
-              <Text style={styles.verificationTitle}>Tourist Verification</Text>
-              
-              <View style={styles.touristInfo}>
-                <InfoRow icon="person" label="Name" value={selectedTourist.name} />
-                <InfoRow icon="flag" label="Nationality" value={selectedTourist.nationality} />
-                <InfoRow icon="document" label="Passport" value={selectedTourist.passportNo} />
-                <InfoRow icon="call" label="Emergency" value={selectedTourist.emergencyContact} />
-                <InfoRow 
-                  icon="time" 
-                  label="Last Verified" 
-                  value={new Date(selectedTourist.lastVerified).toLocaleString()} 
-                />
-              </View>
-
-              <View style={styles.itinerarySection}>
-                <Text style={styles.sectionTitle}>Itinerary</Text>
-                {selectedTourist.itinerary.map((stop, index) => (
-                  <View key={index} style={styles.itineraryItem}>
-                    <Ionicons name="location" size={20} color="#03474f" />
-                    <View style={styles.itineraryText}>
-                      <Text style={styles.placeName}>{stop.place}</Text>
-                      <Text style={styles.dates}>{stop.dates}</Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-
-              {selectedTourist.panicAlerts.length > 0 && (
-                <View style={styles.alertsSection}>
-                  <Text style={[styles.sectionTitle, styles.alertTitle]}>
-                    ⚠️ Active Alerts
-                  </Text>
-                  {selectedTourist.panicAlerts.map((alert, index) => (
-                    <View key={index} style={styles.alertItem}>
-                      <Text style={styles.alertTime}>
-                        {new Date(alert.timestamp).toLocaleString()}
-                      </Text>
-                      <Text style={styles.alertLocation}>
-                        {alert.location}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              <TouchableOpacity 
-                style={styles.verifyButton}
-                onPress={async () => {
-                  try {
-                    await BlockchainService.verifyTourist(selectedTourist.qrHash);
-                    Alert.alert('Success', 'Verification recorded on blockchain');
-                  } catch (error) {
-                    Alert.alert('Error', 'Verification failed');
-                  }
-                }}
-              >
-                <Ionicons name="shield-checkmark" size={24} color="#fff" />
-                <Text style={styles.verifyButtonText}>Verify on Blockchain</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          )}
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#d4105d" />
+          <Text style={styles.loadingText}>Getting your location...</Text>
         </View>
       </View>
-    </Modal>
-  );
+    );
+  }
 
-  // ...existing InfoRow component...
+  if (errorMsg) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="location-off" size={64} color="#ff6b6b" />
+          <Text style={styles.errorText}>{errorMsg}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={getWebLocation}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tourist Verification</Text>
-        <TouchableOpacity 
-          style={styles.scanButton}
-          onPress={() => setScannerVisible(true)}
-        >
-          <Ionicons name="scan" size={24} color="#fff" />
-          <Text style={styles.scanButtonText}>Scan QR</Text>
+        <Text style={styles.headerTitle}>Live Location (Web)</Text>
+        <TouchableOpacity style={styles.refreshButton} onPress={getWebLocation}>
+          <Ionicons name="refresh" size={24} color="#d4105d" />
         </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#03474f" style={styles.loader} />
-      ) : (
-        <FlatList
-          data={tourists}
-          keyExtractor={(item) => item.id}
-          renderItem={renderTouristCard}
-          contentContainerStyle={styles.listContainer}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
-      )}
+      <View style={styles.locationInfo}>
+        <View style={styles.infoRow}>
+          <Ionicons name="location" size={20} color="#d4105d" />
+          <Text style={styles.infoText}>
+            Latitude: {location?.coords.latitude.toFixed(6)}
+          </Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Ionicons name="location" size={20} color="#d4105d" />
+          <Text style={styles.infoText}>
+            Longitude: {location?.coords.longitude.toFixed(6)}
+          </Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Ionicons name="speedometer" size={20} color="#d4105d" />
+          <Text style={styles.infoText}>
+            Accuracy: {location?.coords.accuracy?.toFixed(2)} meters
+          </Text>
+        </View>
+      </View>
 
-      <VerificationModal />
+      <TouchableOpacity style={styles.mapButton} onPress={openInGoogleMaps}>
+        <Ionicons name="map" size={24} color="#fff" />
+        <Text style={styles.mapButtonText}>Open in Google Maps</Text>
+      </TouchableOpacity>
 
-      <Modal
-        visible={scannerVisible}
-        onRequestClose={() => setScannerVisible(false)}
-      >
-        <Camera
-          style={StyleSheet.absoluteFillObject}
-          onBarCodeScanned={handleScan}
-        />
-        <TouchableOpacity
-          style={styles.closeScannerButton}
-          onPress={() => setScannerVisible(false)}
-        >
-          <Ionicons name="close-circle" size={40} color="#fff" />
-        </TouchableOpacity>
-      </Modal>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          Location accessed via browser geolocation API
+        </Text>
+      </View>
     </View>
   );
 }
 
+// Native implementation for mobile devices
+function LiveLocationNative() {
+  const [location, setLocation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        setLoading(false);
+        return;
+      }
+
+      await getCurrentLocation();
+      
+      const interval = setInterval(getCurrentLocation, 30000);
+      return () => clearInterval(interval);
+    })();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    try {
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+      
+      setLocation(location);
+      setLoading(false);
+    } catch (error) {
+      setErrorMsg('Error getting location: ' + error.message);
+      setLoading(false);
+    }
+  };
+
+  const openInGoogleMaps = () => {
+    if (location) {
+      const { latitude, longitude } = location.coords;
+      const url = Platform.OS === 'ios' 
+        ? `http://maps.apple.com/?ll=${latitude},${longitude}`
+        : `https://www.google.com/maps?q=${latitude},${longitude}`;
+      Linking.openURL(url);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#d4105d" />
+          <Text style={styles.loadingText}>Getting your location...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="location-off" size={64} color="#d4105d" />
+          <Text style={styles.errorText}>{errorMsg}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={getCurrentLocation}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Live Location</Text>
+        <TouchableOpacity style={styles.refreshButton} onPress={getCurrentLocation}>
+          <Ionicons name="refresh" size={24} color="#d4105d" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.locationInfo}>
+        <View style={styles.infoRow}>
+          <Ionicons name="location" size={20} color="#d4105d" />
+          <Text style={styles.infoText}>
+            Latitude: {location?.coords.latitude.toFixed(6)}
+          </Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Ionicons name="location" size={20} color="#d4105d" />
+          <Text style={styles.infoText}>
+            Longitude: {location?.coords.longitude.toFixed(6)}
+          </Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Ionicons name="speedometer" size={20} color="#d4105d" />
+          <Text style={styles.infoText}>
+            Accuracy: {location?.coords.accuracy?.toFixed(2)} meters
+          </Text>
+        </View>
+        {location?.coords.altitude && (
+          <View style={styles.infoRow}>
+            <Ionicons name="trending-up" size={20} color="#d4105d" />
+            <Text style={styles.infoText}>
+              Altitude: {location?.coords.altitude.toFixed(2)} meters
+            </Text>
+          </View>
+        )}
+        {location?.coords.speed && (
+          <View style={styles.infoRow}>
+            <Ionicons name="speedometer" size={20} color="#d4105d" />
+            <Text style={styles.infoText}>
+              Speed: {location?.coords.speed.toFixed(2)} m/s
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <TouchableOpacity style={styles.mapButton} onPress={openInGoogleMaps}>
+        <Ionicons name="map" size={24} color="#fff" />
+        <Text style={styles.mapButtonText}>
+          Open in {Platform.OS === 'ios' ? 'Apple Maps' : 'Google Maps'}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          Location updates every 30 seconds
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// Main component that switches between native and web
+export default function LiveLocationScreen() {
+  if (Platform.OS === 'web') {
+    return <LiveLocationWeb />;
+  }
+
+  return <LiveLocationNative />;
+}
+
 const styles = StyleSheet.create({
-  // ...existing styles...
-  modalContainer: {
+  container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    maxHeight: '80%',
   },
-  closeButton: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-    zIndex: 1,
-  },
-  qrContainer: {
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 20,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
     backgroundColor: '#f8f9fa',
-    borderRadius: 12,
   },
-  verificationTitle: {
+  headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#03474f',
-    textAlign: 'center',
-    marginBottom: 20,
+    color: '#d4105d',
   },
-  // Add more styles as needed...
+  refreshButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#e9ecef',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#d4105d',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  locationInfo: {
+    padding: 20,
+    backgroundColor: '#f8f9fa',
+    marginHorizontal: 20,
+    marginTop: 10,
+    borderRadius: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#333',
+  },
+  mapButton: {
+    flexDirection: 'row',
+    backgroundColor: '#d4105d',
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mapButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  footer: {
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    marginTop: 20,
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
 });

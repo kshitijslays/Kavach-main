@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   View,
@@ -15,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 export default function TouristSignUpScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [isValidEmail, setIsValidEmail] = useState(true);
+  const [isFocused, setIsFocused] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,26 +47,41 @@ export default function TouristSignUpScreen({ navigation }) {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={24} color="#03474f" />
+            <Ionicons name="arrow-back" size={24} color="#262626" />
           </TouchableOpacity>
           <Text style={styles.title}>Tourist Registration</Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.formContainer}>
+          <View style={styles.welcomeSection}>
+            <Text style={styles.welcomeTitle}>Create Your Account</Text>
+            <Text style={styles.welcomeSubtitle}>
+              Enter your email to get started with your tourist experience
+            </Text>
+          </View>
+
           <View style={styles.inputField}>
             <Text style={styles.inputLabel}>Email Address</Text>
             <View style={[
               styles.inputContainer,
+              isFocused && styles.inputContainerFocused,
               !isValidEmail && styles.inputContainerError
             ]}>
-              <Ionicons name="mail-outline" size={20} color="#999" style={styles.emailIcon} />
+              <Ionicons 
+                name="mail-outline" 
+                size={20} 
+                color={isFocused ? "#D4105D" : "#999"} 
+                style={styles.emailIcon} 
+              />
               <TextInput
                 style={styles.emailInput}
                 placeholder="Enter your email address"
                 placeholderTextColor="#999"
                 value={email}
                 onChangeText={handleEmailChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -86,15 +101,21 @@ export default function TouristSignUpScreen({ navigation }) {
             disabled={email.length === 0}
           >
             <Text style={styles.primaryButtonText}>Send OTP</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
           </TouchableOpacity>
 
           <Text style={styles.termsText}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By continuing, you agree to our{" "}
+            <Text style={styles.highlightText}>Terms of Service</Text> and{" "}
+            <Text style={styles.highlightText}>Privacy Policy</Text>
           </Text>
         </View>
 
         <View style={styles.helpSection}>
-          <Text style={styles.helpText}>Need help? Contact support</Text>
+          <TouchableOpacity style={styles.helpButton}>
+            <Ionicons name="help-circle-outline" size={16} color="#D4105D" />
+            <Text style={styles.helpText}>Need help? Contact support</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -117,10 +138,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 20,
   },
   backButton: {
     padding: 5,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   placeholder: {
     width: 24,
@@ -128,76 +159,139 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#03474f",
+    color: "#262626",
   },
   formContainer: {
     flex: 1,
+    justifyContent: "center",
+  },
+  welcomeSection: {
+    marginBottom: 40,
+    alignItems: "center",
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#262626",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 20,
   },
   inputField: {
-    marginBottom: 25,
+    marginBottom: 30,
   },
   inputLabel: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 8,
-    color: "#03474f",
+    marginBottom: 10,
+    color: "#262626",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#ddd",
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 15,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  inputContainerFocused: {
+    borderColor: "#D4105D",
+    shadowColor: "#D4105D",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   inputContainerError: {
     borderColor: "#ff3b30",
   },
   emailIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   emailInput: {
     flex: 1,
     fontSize: 16,
-    color: "#03474f",
+    color: "#262626",
   },
   primaryButton: {
-    backgroundColor: "#03474f",
-    paddingVertical: 16,
-    borderRadius: 10,
+    backgroundColor: "#D4105D",
+    paddingVertical: 18,
+    borderRadius: 12,
     alignItems: "center",
     marginBottom: 20,
+    flexDirection: "row",
+    justifyContent: "center",
+    shadowColor: "#D4105D",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   primaryButtonDisabled: {
     backgroundColor: "#ccc",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   primaryButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "bold",
   },
+  buttonIcon: {
+    marginLeft: 8,
+  },
   termsText: {
-    fontSize: 12,
-    color: "#999",
+    fontSize: 13,
+    color: "#666",
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: 20,
+  },
+  highlightText: {
+    color: "#D4105D",
+    fontWeight: "600",
   },
   helpSection: {
     paddingVertical: 15,
     borderTopWidth: 1,
     borderTopColor: "#eee",
   },
+  helpButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   helpText: {
-    fontSize: 12,
-    color: "#999",
+    fontSize: 13,
+    color: "#D4105D",
     textAlign: "center",
+    marginLeft: 6,
+    fontWeight: "500",
   },
   errorText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#ff3b30",
-    marginTop: 5,
+    marginTop: 6,
     marginLeft: 5,
+    fontWeight: "500",
   },
 });
