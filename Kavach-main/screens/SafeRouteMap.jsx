@@ -85,33 +85,119 @@ function decodePolyline(encoded) {
   return result;
 }
 
-// Score a route: shorter distance + less duration = safer (simple heuristic)
-// Returns 0–100 where higher = safer
-function scoreRoute(route, allRoutes) {
-  const maxDist = Math.max(...allRoutes.map(r => r.distance));
-  const minDist = Math.min(...allRoutes.map(r => r.distance));
-  const range = maxDist - minDist || 1;
-  // Shorter routes score higher
-  return Math.round(100 - ((route.distance - minDist) / range) * 80);
+// ------------------------------------------------------------------
+// Helper: Calculate distance between two coords in meters (Haversine)
+// ------------------------------------------------------------------
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // Earth radius in meters
+  const m = Math.PI / 180;
+  const φ1 = lat1 * m;
+  const φ2 = lat2 * m;
+  const Δφ = (lat2 - lat1) * m;
+  const Δλ = (lon2 - lon1) * m;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
-// Assign color based on rank (index 0 = safest)
+// ------------------------------------------------------------------
+// Generate mock crime zones between Origin and Destination
+// ------------------------------------------------------------------
+function generateCrimeZones(origin, dest) {
+  const zones = [];
+  const numZones = Math.floor(Math.random() * 3) + 2; // 2 to 4 zones
+  
+  for (let i = 0; i < numZones; i++) {
+    // Pick a random point somewhere along the path
+    const t = 0.2 + (Math.random() * 0.6); // Between 20% and 80% of the way
+    const lat = origin.latitude + (dest.latitude - origin.latitude) * t + (Math.random() - 0.5) * 0.02;
+    const lng = origin.longitude + (dest.longitude - origin.longitude) * t + (Math.random() - 0.5) * 0.02;
+    
+    zones.push({
+      id: i,
+      latitude: lat,
+      longitude: lng,
+      radius: Math.floor(Math.random() * 800) + 400, // 400m to 1200m radius
+      type: Math.random() > 0.4 ? "red" : "yellow" // 60% high risk, 40% mod risk
+    });
+  }
+  return zones;
+}
+
+// ------------------------------------------------------------------
+// Segment route arrays based on intersection with crime zones
+// ------------------------------------------------------------------
+function segmentRoute(points, crimeZones) {
+  if (!points || points.length === 0) return [];
+
+  const segments = [];
+  let currentSegment = [];
+  let currentSafety = "green"; // Default
+
+  for (let i = 0; i < points.length; i++) {
+    const pt = points[i];
+    
+    // Check if point is inside any crime zone
+    let pointSafety = "green";
+    for (const zone of crimeZones) {
+      const dist = getDistance(pt.latitude, pt.longitude, zone.latitude, zone.longitude);
+      if (dist <= zone.radius) {
+        if (zone.type === "red") {
+          pointSafety = "red";
+          break; // Red overrides yellow
+        } else if (zone.type === "yellow") {
+          pointSafety = "yellow";
+        }
+      }
+    }
+
+    if (currentSegment.length === 0) {
+      currentSegment.push(pt);
+      currentSafety = pointSafety;
+    } else if (pointSafety === currentSafety) {
+      currentSegment.push(pt);
+    } else {
+      // Safety level changed -> end current segment and start a new one
+      // Include the current point in both segments perfectly connect the polylines
+      currentSegment.push(pt); 
+      segments.push({ color: currentSafety, points: currentSegment });
+
+      currentSegment = [pt];
+      currentSafety = pointSafety;
+    }
+  }
+
+  if (currentSegment.length > 0) {
+    segments.push({ color: currentSafety, points: currentSegment });
+  }
+
+  return segments;
+}
+
+// Calculate an overall route score (0-100) based on segment distances
+function scoreSegmentedRoute(segments) {
+  let redPts = 0, yellowPts = 0, greenPts = 0;
+  segments.forEach(seg => {
+    if (seg.color === "red") redPts += seg.points.length;
+    else if (seg.color === "yellow") yellowPts += seg.points.length;
+    else greenPts += seg.points.length;
+  });
+  
+  const total = redPts + yellowPts + greenPts;
+  if (total === 0) return 100;
+  
+  // High penalty for red, moderate for yellow
+  let score = 100 - ((redPts / total) * 100) - ((yellowPts / total) * 30);
+  return Math.max(0, Math.round(score));
+}
+
 function routeColor(rank) {
-  if (rank === 0) return "#27AE60"; // green – safest
-  if (rank === 1) return "#F39C12"; // yellow – moderate
-  return "#E74C3C";                 // red – dangerous
-}
-
-function routeLabel(rank) {
-  if (rank === 0) return "Safest";
-  if (rank === 1) return "Moderate";
-  return "Dangerous";
-}
-
-function routeLabelIcon(rank) {
-  if (rank === 0) return "shield-checkmark";
-  if (rank === 1) return "warning";
-  return "skull";
+  if (rank === 0) return "#27AE60";
+  if (rank === 1) return "#F39C12";
+  return "#E74C3C";
 }
 
 // ------------------------------------------------------------------
@@ -139,6 +225,7 @@ export default function SafeRouteMapScreen({ navigation }) {
   const [usingCurrentLocation, setUsingCurrentLocation] = useState(true); // true = use GPS
   const [destination, setDestination] = useState("");
   const [routes, setRoutes] = useState([]);
+  const [crimeZones, setCrimeZones] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(0);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(true);
@@ -272,6 +359,10 @@ export default function SafeRouteMapScreen({ navigation }) {
         return;
       }
 
+      // Generate mock crime zones between the two points to simulate safety analysis
+      const newCrimeZones = generateCrimeZones(originCoord, destCoord);
+      setCrimeZones(newCrimeZones);
+
       // Fetch up to 3 alternative driving routes from ORS (GeoJSON: [lng, lat])
       const body = {
         coordinates: [
@@ -305,20 +396,26 @@ export default function SafeRouteMapScreen({ navigation }) {
         return;
       }
 
-      const parsed = data.routes.map((r, i) => ({
-        points: decodePolyline(r.geometry),
-        distance: r.summary.distance,
-        duration: r.summary.duration,
-        distanceText: (r.summary.distance / 1000).toFixed(1) + " km",
-        durationText: Math.round(r.summary.duration / 60) + " mins",
-        summary: `Route ${i + 1}`,
-        originCoord,
-        destCoord: { latitude: destCoord.latitude, longitude: destCoord.longitude },
-      }));
+      const parsed = data.routes.map((r, i) => {
+        const rawPoints = decodePolyline(r.geometry);
+        const segments = segmentRoute(rawPoints, newCrimeZones);
+        const routeScore = scoreSegmentedRoute(segments);
+        
+        return {
+          segments,
+          score: routeScore,
+          points: rawPoints, // Full array for map bounding box
+          distance: r.summary.distance,
+          duration: r.summary.duration,
+          distanceText: (r.summary.distance / 1000).toFixed(1) + " km",
+          durationText: Math.round(r.summary.duration / 60) + " mins",
+          summary: `Route ${i + 1}`,
+          originCoord,
+          destCoord: { latitude: destCoord.latitude, longitude: destCoord.longitude },
+        };
+      });
 
-      const scored = parsed
-        .map((r) => ({ ...r, score: scoreRoute(r, parsed) }))
-        .sort((a, b) => b.score - a.score);
+      const scored = parsed.sort((a, b) => b.score - a.score);
 
       setRoutes(scored);
       setSelectedRoute(0);
@@ -492,21 +589,40 @@ export default function SafeRouteMapScreen({ navigation }) {
             showsUserLocation
             showsMyLocationButton
           >
-            {/* Draw each route as a Polyline */}
-            {routes.map((route, idx) => (
-              <Polyline
-                key={idx}
-                coordinates={route.points}
-                strokeColor={
-                  idx === selectedRoute
-                    ? routeColor(idx)
-                    : routeColor(idx) + "66" // dimmed if not selected
-                }
-                strokeWidth={idx === selectedRoute ? 6 : 3}
-                lineDashPattern={idx === selectedRoute ? null : [6, 4]}
-                tappable
-                onPress={() => setSelectedRoute(idx)}
+            {/* Draw Simulated Crime Zones */}
+            {crimeZones.map((zone, i) => (
+              <MapView.Circle
+                key={`zone_${i}`}
+                center={{ latitude: zone.latitude, longitude: zone.longitude }}
+                radius={zone.radius}
+                fillColor={zone.type === "red" ? "rgba(231, 76, 60, 0.25)" : "rgba(243, 156, 18, 0.25)"}
+                strokeColor={zone.type === "red" ? "rgba(231, 76, 60, 0.5)" : "rgba(243, 156, 18, 0.5)"}
+                strokeWidth={1}
               />
+            ))}
+
+            {/* Draw each route in Segments */}
+            {routes.map((route, routeIdx) => (
+              route.segments.map((seg, segIdx) => {
+                let sColor = "#27AE60"; // green
+                if (seg.color === "red") sColor = "#E74C3C";
+                if (seg.color === "yellow") sColor = "#F39C12";
+
+                const isSelected = routeIdx === selectedRoute;
+
+                return (
+                  <Polyline
+                    key={`route_${routeIdx}_seg_${segIdx}`}
+                    coordinates={seg.points}
+                    strokeColor={isSelected ? sColor : sColor + "55"}
+                    strokeWidth={isSelected ? 6 : 3}
+                    lineDashPattern={isSelected ? null : [6, 4]}
+                    tappable={true}
+                    onPress={() => setSelectedRoute(routeIdx)}
+                    zIndex={isSelected ? 10 : 2}
+                  />
+                );
+              })
             ))}
 
             {/* Origin marker */}

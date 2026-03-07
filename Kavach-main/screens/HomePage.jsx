@@ -93,7 +93,7 @@ export default function HomeScreen({ navigation, route }) {
       id: "2",
       title: "Emergency Contacts Ready",
       description: `You have ${emergencyContacts.length} emergency contact${emergencyContacts.length !== 1 ? 's' : ''} set up.`,
-      icon: "contacts"
+      icon: "people"
     },
     {
       id: "3",

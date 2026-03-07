@@ -120,7 +120,7 @@ export default function DigitalIDScreen({ navigation, route }) {
             style={styles.primaryButton}
             onPress={() => {
               console.log('🏁 Setup completed! Navigating to Home');
-              navigation.navigate("Home", {
+              navigation.navigate("MainTabs", {
                 setupCompleted: true,
                 profile: route.params?.profile,
                 userData: route.params?.userData

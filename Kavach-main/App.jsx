@@ -56,7 +56,7 @@ export default function App() {
         <Stack.Screen name="KYCSimulation" component={TripDetails} />
         <Stack.Screen name="TripDetails" component={TripDetails} />
         <Stack.Screen name="DigitalID" component={DigitalId} />
-        <Stack.Screen name="Home" component={TabNavigator} />
+        <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="SafeRouteMap" component={SafeRouteMap} />
       </Stack.Navigator>
     </NavigationContainer>
