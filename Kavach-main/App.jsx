@@ -19,6 +19,7 @@ import HomePage from "./screens/HomePage.jsx";
 import TabNavigator from "./navigations/TabNavigator.jsx";
 import MovementDetector from "./screens/MovementDetector.js"
 import VoiceAlert from "./screens/VoiceAlert.js";
+import SafeRouteMap from "./screens/SafeRouteMap.jsx";
 // import PoliceDashboard from "./screens/PolicDashboard.js";
 
 const Stack = createNativeStackNavigator();
@@ -48,6 +49,7 @@ export default function App() {
         <Stack.Screen name="TripDetails" component={TripDetails} />
         <Stack.Screen name="DigitalID" component={DigitalId} />
         <Stack.Screen name="Home" component={TabNavigator} />
+        <Stack.Screen name="SafeRouteMap" component={SafeRouteMap} />
       </Stack.Navigator>
     </NavigationContainer>
   );

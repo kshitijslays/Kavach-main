@@ -67,12 +67,11 @@ export const sendOTP = async (req, res) => {
       console.error("❌ Failed to send email:", emailError.message);
       console.error("❌ Full email error:", emailError);
       
-      // Still return success if we have memory storage as fallback
-      res.status(200).json({ 
-        message: "OTP generated successfully (email may have failed)", 
+      // Return error so the frontend knows email was not delivered
+      res.status(500).json({ 
+        message: "Failed to send OTP email. Please try again later.", 
         email: email,
-        warning: "Email delivery may have failed, but OTP is valid for verification",
-        debug: process.env.NODE_ENV === 'development' ? { otp } : undefined
+        error: emailError.message
       });
     }
 

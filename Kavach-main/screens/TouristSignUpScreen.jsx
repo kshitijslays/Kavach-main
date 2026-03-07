@@ -8,13 +8,17 @@ import {
   StatusBar,
   Platform,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { authAPI } from "../services/api";
 
 export default function TouristSignUpScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [isValidEmail, setIsValidEmail] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,11 +35,19 @@ export default function TouristSignUpScreen({ navigation }) {
     }
   };
 
-  const handleSendOTP = () => {
-    if (validateEmail(email)) {
-      navigation.navigate("OTP", { email: email });
-    } else {
+  const handleSendOTP = async () => {
+    if (!validateEmail(email)) {
       setIsValidEmail(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      await authAPI.sendOTP(email.toLowerCase().trim());
+      navigation.navigate("OTP", { email: email.toLowerCase().trim() });
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to send OTP. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,13 +107,19 @@ export default function TouristSignUpScreen({ navigation }) {
           <TouchableOpacity
             style={[
               styles.primaryButton,
-              email.length === 0 && styles.primaryButtonDisabled
+              (email.length === 0 || loading) && styles.primaryButtonDisabled
             ]}
             onPress={handleSendOTP}
-            disabled={email.length === 0}
+            disabled={email.length === 0 || loading}
           >
-            <Text style={styles.primaryButtonText}>Send OTP</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Text style={styles.primaryButtonText}>Send OTP</Text>
+                <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
+              </>
+            )}
           </TouchableOpacity>
 
           <Text style={styles.termsText}>

@@ -237,6 +237,33 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         )}
 
+        {/* Safe Route Section */}
+        <View style={styles.safeRouteSection}>
+          <Text style={styles.sectionTitle}>Safe Navigation</Text>
+          <TouchableOpacity
+            style={styles.safeRouteCard}
+            onPress={() => navigation.navigate('SafeRouteMap')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.safeRouteLeft}>
+              <View style={styles.safeRouteIconBg}>
+                <Ionicons name="map" size={28} color="#fff" />
+              </View>
+              <View style={styles.safeRouteText}>
+                <Text style={styles.safeRouteTitle}>Safe Route Finder</Text>
+                <Text style={styles.safeRouteSub}>Color-coded routes by safety level</Text>
+                <View style={styles.safeRouteLegendRow}>
+                  <View style={[styles.safeRouteDot, { backgroundColor: '#27AE60' }]} />
+                  <View style={[styles.safeRouteDot, { backgroundColor: '#F39C12' }]} />
+                  <View style={[styles.safeRouteDot, { backgroundColor: '#E74C3C' }]} />
+                  <Text style={styles.safeRouteLegendLabel}>Safe · Moderate · Danger</Text>
+                </View>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color="#D4105D" />
+          </TouchableOpacity>
+        </View>
+
         {/* Digital ID Preview */}
         <View style={styles.digitalIdSection}>
           <Text style={styles.sectionTitle}>Your Digital ID</Text>
@@ -510,6 +537,69 @@ const styles = StyleSheet.create({
     color: "#D4105D",
     fontWeight: "600",
     fontSize: 14,
+  },
+  // Safe Route Section
+  safeRouteSection: {
+    marginHorizontal: 20,
+    marginBottom: 25,
+  },
+  safeRouteCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  safeRouteLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  safeRouteIconBg: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#1a1a2e",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  safeRouteText: {
+    flex: 1,
+  },
+  safeRouteTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#262626",
+    marginBottom: 2,
+  },
+  safeRouteSub: {
+    fontSize: 13,
+    color: "#666",
+    marginBottom: 6,
+  },
+  safeRouteLegendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  safeRouteDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  safeRouteLegendLabel: {
+    fontSize: 11,
+    color: "#888",
+    marginLeft: 4,
   },
   // Digital ID Section
   digitalIdSection: {

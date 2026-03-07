@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000 // Fails fast in 5s instead of hanging for 30s
+    });
     console.log(`✅ MongoDB Atlas connected: ${conn.connection.host}`);
     console.log(`✅ Database: ${conn.connection.name}`);
   } catch (err) {

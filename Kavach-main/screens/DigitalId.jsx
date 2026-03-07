@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -24,18 +24,24 @@ export default function DigitalIDScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#262626" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Digital ID</Text>
-          <View style={styles.placeholder} />
-        </View>
+      {/* Fixed Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#262626" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Digital ID</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
 
         <Text style={styles.subtitle}>
           Your secure digital identification is ready
@@ -141,7 +147,7 @@ export default function DigitalIDScreen({ navigation, route }) {
         <Text style={styles.footerNote}>
           Keep this ID accessible during your travels for quick verification
         </Text>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -151,15 +157,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "#f8f9fa",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 4,
+    paddingBottom: 40,
   },
   backButton: {
     padding: 8,
