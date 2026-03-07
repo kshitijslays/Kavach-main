@@ -112,11 +112,14 @@ function mockPolyline(origin, dest, jitter) {
 export default function SafeRouteMapScreen({ navigation }) {
   const mapRef = useRef(null);
   const [userLocation, setUserLocation] = useState(null);
+  const [source, setSource] = useState("");           // typed source address
+  const [usingCurrentLocation, setUsingCurrentLocation] = useState(true); // true = use GPS
   const [destination, setDestination] = useState("");
   const [routes, setRoutes] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(0);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(true);
+  const [locationLabel, setLocationLabel] = useState("Current Location"); // display label
 
   // Request and fetch user location on mount
   useEffect(() => {
@@ -138,6 +141,12 @@ export default function SafeRouteMapScreen({ navigation }) {
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
         });
+        // Reverse geocode to get a readable label
+        const rev = await Location.reverseGeocodeAsync(loc.coords);
+        if (rev && rev.length > 0) {
+          const r = rev[0];
+          setLocationLabel([r.name, r.city].filter(Boolean).join(", ") || "Current Location");
+        }
       } catch {
         // Fallback to Jaipur city centre for demo
         setUserLocation({ latitude: 26.9124, longitude: 75.7873 });
@@ -146,28 +155,61 @@ export default function SafeRouteMapScreen({ navigation }) {
     })();
   }, []);
 
+  // When user taps "Use Current Location" — resets source to GPS
+  const handleUseCurrentLocation = () => {
+    setSource("");
+    setUsingCurrentLocation(true);
+    setRoutes([]);
+  };
+
   const fetchRoutes = async () => {
     if (!destination.trim()) {
-      Alert.alert("Enter Destination", "Please type a destination to search.");
+      Alert.alert("Enter Destination", "Please enter a destination address.");
       return;
     }
-    if (!userLocation) return;
+    if (!usingCurrentLocation && !source.trim()) {
+      Alert.alert("Enter Source", "Please enter a source address or use current location.");
+      return;
+    }
     setLoading(true);
 
     try {
-      // Step 1: Geocode destination text → coordinates
+      // Resolve source coordinates
+      let originCoord;
+      if (usingCurrentLocation) {
+        if (!userLocation) {
+          Alert.alert("Location unavailable", "GPS location not ready yet. Try again in a moment.");
+          setLoading(false);
+          return;
+        }
+        originCoord = { ...userLocation, label: locationLabel };
+      } else {
+        originCoord = await geocodePlace(source);
+        if (!originCoord) {
+          Alert.alert(
+            "Source Not Found",
+            `Could not find "${source}". Try a more specific address.`
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Resolve destination coordinates
       const destCoord = await geocodePlace(destination);
       if (!destCoord) {
-        Alert.alert("Place Not Found", `Could not find "${destination}". Try a more specific name, e.g. "Hawa Mahal, Jaipur".`);
+        Alert.alert(
+          "Destination Not Found",
+          `Could not find "${destination}". Try a more specific name, e.g. "Hawa Mahal, Jaipur".`
+        );
         setLoading(false);
         return;
       }
 
-      // Step 2: Fetch up to 3 alternative driving routes from ORS
-      // ORS uses [longitude, latitude] order (GeoJSON)
+      // Fetch up to 3 alternative driving routes from ORS (GeoJSON: [lng, lat])
       const body = {
         coordinates: [
-          [userLocation.longitude, userLocation.latitude],
+          [originCoord.longitude, originCoord.latitude],
           [destCoord.longitude, destCoord.latitude],
         ],
         alternative_routes: {
@@ -192,7 +234,7 @@ export default function SafeRouteMapScreen({ navigation }) {
       const data = await res.json();
 
       if (!data.routes || data.routes.length === 0) {
-        Alert.alert("No Routes Found", "Could not find driving routes to that destination.");
+        Alert.alert("No Routes Found", "Could not find driving routes between these two locations.");
         setLoading(false);
         return;
       }
@@ -203,7 +245,8 @@ export default function SafeRouteMapScreen({ navigation }) {
         duration: r.summary.duration,
         distanceText: (r.summary.distance / 1000).toFixed(1) + " km",
         durationText: Math.round(r.summary.duration / 60) + " mins",
-        summary: `Route ${i + 1} · ${destCoord.label.split(",")[0]}`,
+        summary: `Route ${i + 1}`,
+        originCoord,
         destCoord: { latitude: destCoord.latitude, longitude: destCoord.longitude },
       }));
 
@@ -259,25 +302,70 @@ export default function SafeRouteMapScreen({ navigation }) {
         </View>
       </View>
 
-      {/* ── Search Bar ── */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#aaa" style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Enter destination (e.g. Hawa Mahal)"
-            placeholderTextColor="#aaa"
-            value={destination}
-            onChangeText={setDestination}
-            onSubmitEditing={fetchRoutes}
-            returnKeyType="search"
-          />
-          {destination.length > 0 && (
-            <TouchableOpacity onPress={() => { setDestination(""); setRoutes([]); }}>
-              <Ionicons name="close-circle" size={18} color="#aaa" />
+      {/* ── Source + Destination Inputs ── */}
+      <View style={styles.searchPanel}>
+        {/* Source Row */}
+        <View style={styles.inputRow}>
+          <View style={styles.dotGreen} />
+          {usingCurrentLocation ? (
+            <TouchableOpacity
+              style={styles.currentLocBtn}
+              onPress={() => {
+                setUsingCurrentLocation(false);
+                setSource("");
+                setRoutes([]);
+              }}
+            >
+              <Ionicons name="locate" size={14} color="#27AE60" />
+              <Text style={styles.currentLocText} numberOfLines={1}>{locationLabel}</Text>
+              <Ionicons name="close-circle" size={14} color="#aaa" />
             </TouchableOpacity>
+          ) : (
+            <View style={styles.inputBox}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Type source address..."
+                placeholderTextColor="#aaa"
+                value={source}
+                onChangeText={(t) => { setSource(t); setRoutes([]); }}
+                returnKeyType="next"
+              />
+              <TouchableOpacity onPress={handleUseCurrentLocation}>
+                <Ionicons name="locate" size={18} color="#27AE60" />
+              </TouchableOpacity>
+            </View>
           )}
         </View>
+
+        {/* Dotted line connector */}
+        <View style={styles.connector}>
+          <View style={styles.connectorDot} />
+          <View style={styles.connectorDot} />
+          <View style={styles.connectorDot} />
+        </View>
+
+        {/* Destination Row */}
+        <View style={styles.inputRow}>
+          <View style={styles.dotRed} />
+          <View style={styles.inputBox}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Enter destination address..."
+              placeholderTextColor="#aaa"
+              value={destination}
+              onChangeText={(t) => { setDestination(t); setRoutes([]); }}
+              onSubmitEditing={fetchRoutes}
+              returnKeyType="search"
+            />
+            {destination.length > 0 && (
+              <TouchableOpacity onPress={() => { setDestination(""); setRoutes([]); }}>
+                <Ionicons name="close-circle" size={18} color="#aaa" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Search Button */}
         <TouchableOpacity
           style={[styles.goBtn, loading && { opacity: 0.6 }]}
           onPress={fetchRoutes}
@@ -286,7 +374,10 @@ export default function SafeRouteMapScreen({ navigation }) {
           {loading ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Ionicons name="navigate" size={20} color="#fff" />
+            <>
+              <Ionicons name="navigate" size={18} color="#fff" />
+              <Text style={styles.goBtnText}>Find Safe Routes</Text>
+            </>
           )}
         </TouchableOpacity>
       </View>
@@ -453,15 +544,47 @@ const styles = StyleSheet.create({
   headerRight: {
     marginLeft: "auto",
   },
-  // Search
-  searchRow: {
-    flexDirection: "row",
+  // Search Panel
+  searchPanel: {
     paddingHorizontal: 16,
     paddingBottom: 12,
     backgroundColor: "#1a1a2e",
-    gap: 10,
   },
-  searchBox: {
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  dotGreen: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#27AE60",
+    borderWidth: 2,
+    borderColor: "#1a1a2e",
+  },
+  dotRed: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#E74C3C",
+    borderWidth: 2,
+    borderColor: "#1a1a2e",
+  },
+  connector: {
+    marginLeft: 4,
+    width: 2,
+    paddingVertical: 4,
+    alignItems: "center",
+    gap: 4,
+  },
+  connectorDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: "#444",
+  },
+  inputBox: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
@@ -475,13 +598,38 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
   },
+  currentLocBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(39, 174, 96, 0.15)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 46,
+    borderWidth: 1,
+    borderColor: "rgba(39, 174, 96, 0.3)",
+    gap: 8,
+  },
+  currentLocText: {
+    flex: 1,
+    color: "#27AE60",
+    fontSize: 14,
+    fontWeight: "500",
+  },
   goBtn: {
-    width: 46,
+    flexDirection: "row",
     height: 46,
     borderRadius: 12,
     backgroundColor: "#D4105D",
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 12,
+    gap: 8,
+  },
+  goBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "bold",
   },
   // Map
   mapContainer: {

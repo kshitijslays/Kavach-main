@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import HomePage from "../screens/HomePage";
 import DigitalId from '../screens/DigitalId';
-import PanicButtonScreen from '../screens/Panic';
+import SafeRouteMap from '../screens/SafeRouteMap';
 import ThreeSixtyDeg from '../screens/ThreeSixtyDeg';
 
 const Tab = createBottomTabNavigator();
@@ -27,8 +27,8 @@ export default function TabNavigator() {
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
               break;
-            case 'Panic':
-              iconName = focused ? 'alert-circle' : 'alert-circle-outline';
+            case 'SafeRoute':
+              iconName = focused ? 'map' : 'map-outline';
               break;
             default:
               iconName = 'help-circle-outline';
@@ -74,10 +74,10 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Panic" 
-        component={PanicButtonScreen}
+        name="SafeRoute" 
+        component={SafeRouteMap}
         options={{
-          tabBarLabel: 'Emergency'
+          tabBarLabel: 'Safe Route'
         }}
       />
     </Tab.Navigator>
