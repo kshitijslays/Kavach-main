@@ -10,6 +10,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { authAPI } from "../services/api";
@@ -17,7 +19,6 @@ import { authAPI } from "../services/api";
 export default function TouristSignUpScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [isValidEmail, setIsValidEmail] = useState(true);
-  const [isFocused, setIsFocused] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const validateEmail = (email) => {
@@ -27,7 +28,6 @@ export default function TouristSignUpScreen({ navigation }) {
 
   const handleEmailChange = (text) => {
     setEmail(text);
-    // Only validate when there's text, don't show error when empty
     if (text.length > 0) {
       setIsValidEmail(validateEmail(text));
     } else {
@@ -53,89 +53,103 @@ export default function TouristSignUpScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#262626" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Tourist Registration</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        <View style={styles.formContainer}>
-          <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Create Your Account</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Enter your email to get started with your tourist experience
-            </Text>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#0F172A" />
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.inputField}>
-            <Text style={styles.inputLabel}>Email Address</Text>
-            <View style={[
-              styles.inputContainer,
-              isFocused && styles.inputContainerFocused,
-              !isValidEmail && styles.inputContainerError
-            ]}>
-              <Ionicons 
-                name="mail-outline" 
-                size={20} 
-                color={isFocused ? "#D4105D" : "#999"} 
-                style={styles.emailIcon} 
-              />
-              <TextInput
-                style={styles.emailInput}
-                placeholder="Enter your email address"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={handleEmailChange}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+          {/* Form */}
+          <View style={styles.formContainer}>
+            <View style={styles.welcomeSection}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="shield-checkmark" size={48} color="#3182CE" />
+              </View>
+              <Text style={styles.welcomeTitle}>Create Your Account</Text>
+              <Text style={styles.welcomeSubtitle}>
+                Enter your email to get started with your secure profile
+              </Text>
             </View>
-            {!isValidEmail && (
-              <Text style={styles.errorText}>Please enter a valid email address</Text>
-            )}
+
+            <View style={styles.inputField}>
+              <Text style={styles.inputLabel}>Email Address</Text>
+              <View style={[
+                styles.inputContainer,
+                !isValidEmail && styles.inputContainerError
+              ]}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color="#94A3B8"
+                  style={styles.emailIcon}
+                />
+                <TextInput
+                  style={styles.emailInput}
+                  placeholder="Enter your email address"
+                  placeholderTextColor="#94A3B8"
+                  value={email}
+                  onChangeText={handleEmailChange}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+              {!isValidEmail && (
+                <Text style={styles.errorText}>Please enter a valid email address</Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                (email.length === 0 || loading) && styles.primaryButtonDisabled
+              ]}
+              onPress={handleSendOTP}
+              disabled={email.length === 0 || loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Text style={styles.primaryButtonText}>Send Verification Code</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
+                </>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.termsContainer}>
+              <Text style={styles.termsText}>
+                By continuing, you agree to our{" "}
+                <Text style={styles.highlightText}>Terms of Service</Text> and{" "}
+                <Text style={styles.highlightText}>Privacy Policy</Text>
+              </Text>
+            </View>
           </View>
 
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              (email.length === 0 || loading) && styles.primaryButtonDisabled
-            ]}
-            onPress={handleSendOTP}
-            disabled={email.length === 0 || loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Text style={styles.primaryButtonText}>Send OTP</Text>
-                <Ionicons name="arrow-forward" size={20} color="#fff" style={styles.buttonIcon} />
-              </>
-            )}
-          </TouchableOpacity>
-
-          <Text style={styles.termsText}>
-            By continuing, you agree to our{" "}
-            <Text style={styles.highlightText}>Terms of Service</Text> and{" "}
-            <Text style={styles.highlightText}>Privacy Policy</Text>
-          </Text>
-        </View>
-
-        <View style={styles.helpSection}>
-          <TouchableOpacity style={styles.helpButton}>
-            <Ionicons name="help-circle-outline" size={16} color="#D4105D" />
-            <Text style={styles.helpText}>Need help? Contact support</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+          {/* Help */}
+          <View style={styles.helpSection}>
+            <TouchableOpacity style={styles.helpButton}>
+              <Ionicons name="help-circle-outline" size={16} color="#3182CE" />
+              <Text style={styles.helpText}>Need help? Contact support</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -144,171 +158,165 @@ const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#ffffff",
   },
-  container: {
+  // ✅ No justifyContent here — prevents layout jump on keyboard show
+  keyboardView: {
     flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  // ✅ ScrollView handles the layout, grows to fill space
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "space-between",
-    backgroundColor: "#f8f9fa",
-    padding: 20,
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? 40 : 20,
+    paddingBottom: 10,
   },
   backButton: {
-    padding: 5,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  placeholder: {
-    width: 24,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#262626",
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "flex-start",
   },
   formContainer: {
     flex: 1,
     justifyContent: "center",
+    paddingHorizontal: 32,
+    paddingVertical: 40,
   },
   welcomeSection: {
     marginBottom: 40,
     alignItems: "center",
   },
+  iconContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: "rgba(49, 130, 206, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
   welcomeTitle: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#262626",
+    fontWeight: "800",
+    color: "#0F172A",
     marginBottom: 8,
     textAlign: "center",
   },
   welcomeSubtitle: {
     fontSize: 16,
-    color: "#666",
+    color: "#64748B",
     textAlign: "center",
     lineHeight: 22,
     paddingHorizontal: 20,
   },
   inputField: {
-    marginBottom: 30,
+    marginBottom: 24,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
-    marginBottom: 10,
-    color: "#262626",
+    marginBottom: 8,
+    color: "#0F172A",
+    paddingLeft: 4,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#F8FAFC",
     borderWidth: 1.5,
-    borderColor: "#ddd",
-    borderRadius: 12,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    minHeight: 56,
   },
   inputContainerFocused: {
-    borderColor: "#D4105D",
-    shadowColor: "#D4105D",
+    borderColor: "#3182CE",
+    backgroundColor: "#ffffff",
+    shadowColor: "#3182CE",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   inputContainerError: {
-    borderColor: "#ff3b30",
+    borderColor: "#EF4444",
   },
   emailIcon: {
     marginRight: 12,
   },
   emailInput: {
     flex: 1,
+    height: 56,
     fontSize: 16,
-    color: "#262626",
+    color: "#0F172A",
+    width: "100%",
+  },
+  errorText: {
+    color: "#EF4444",
+    fontSize: 12,
+    marginTop: 6,
+    paddingLeft: 4,
   },
   primaryButton: {
-    backgroundColor: "#D4105D",
-    paddingVertical: 18,
-    borderRadius: 12,
-    alignItems: "center",
-    marginBottom: 20,
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
+    backgroundColor: "#0F172A",
+    height: 56,
+    borderRadius: 16,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
+    marginBottom: 24,
   },
   primaryButtonDisabled: {
-    backgroundColor: "#ccc",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: "#94A3B8",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   primaryButtonText: {
     color: "#fff",
-    fontSize: 17,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
+    marginRight: 8,
   },
   buttonIcon: {
-    marginLeft: 8,
+    marginLeft: 0,
+  },
+  termsContainer: {
+    alignItems: "center",
+    marginTop: 8,
   },
   termsText: {
-    fontSize: 13,
-    color: "#666",
+    color: "#94A3B8",
+    fontSize: 12,
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 18,
   },
   highlightText: {
-    color: "#D4105D",
+    color: "#0F172A",
     fontWeight: "600",
   },
   helpSection: {
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
+    padding: 24,
+    alignItems: "center",
+    paddingBottom: Platform.OS === 'ios' ? 32 : 24,
   },
   helpButton: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    padding: 12,
+    backgroundColor: "rgba(49, 130, 206, 0.05)",
+    borderRadius: 20,
   },
   helpText: {
-    fontSize: 13,
-    color: "#D4105D",
-    textAlign: "center",
-    marginLeft: 6,
-    fontWeight: "500",
-  },
-  errorText: {
-    fontSize: 13,
-    color: "#ff3b30",
-    marginTop: 6,
     marginLeft: 5,
     fontWeight: "500",
   },

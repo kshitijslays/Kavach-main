@@ -17,6 +17,7 @@ import { authAPI } from '../services/api';
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,65 +74,82 @@ export default function LoginScreen({ navigation }) {
         style={styles.container}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#0F172A" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="mail" size={50} color="#03474f" />
+          <View style={styles.brandingContainer}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="shield-checkmark" size={48} color="#3182CE" />
+            </View>
+            <Text style={styles.title}>Welcome to Shield</Text>
+            <Text style={styles.subtitle}>Sign in to access your secure profile</Text>
           </View>
 
-          <View style={styles.inputContainer}>
+          <View style={styles.formContainer}>
             <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            <View style={[
+              styles.inputContainer,
+              isFocused && styles.inputContainerFocused
+            ]}>
+              <Ionicons 
+                name="mail-outline" 
+                size={20} 
+                color={isFocused ? "#3182CE" : "#94A3B8"} 
+                style={styles.inputIcon} 
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor="#94A3B8"
+                value={email}
+                onChangeText={setEmail}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.button, (!email.trim() || loading) && styles.buttonDisabled]}
+              onPress={sendOTP}
+              disabled={!email.trim() || loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Text style={styles.buttonText}>Send Verification Code</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#fff" />
+                </>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity 
+              style={styles.googleButton}
+              onPress={() => Alert.alert('Info', 'Google Sign-in will be implemented later')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="logo-google" size={20} color="#DB4437" />
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity 
-            style={[styles.button, (!email.trim() || loading) && styles.buttonDisabled]}
-            onPress={sendOTP}
-            disabled={!email.trim() || loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Text style={styles.buttonText}>Send OTP</Text>
-                <Ionicons name="arrow-forward" size={20} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity 
-            style={styles.googleButton}
-            onPress={() => {
-              // TODO: Implement Google Sign-in
-              Alert.alert('Info', 'Google Sign-in will be implemented later');
-            }}
-          >
-            <Ionicons name="logo-google" size={20} color="#DB4437" />
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By continuing, you agree to Shield's Terms of Service and Privacy Policy
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -142,119 +160,158 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#ffffff",
   },
   container: {
     flex: 1,
-    justifyContent: "space-between",
   },
   header: {
-    padding: 20,
+    paddingHorizontal: 24,
     paddingTop: Platform.OS === 'android' ? 40 : 20,
-    alignItems: "center",
+    paddingBottom: 10,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#03474f",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6B7280",
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "flex-start",
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 32,
     justifyContent: "center",
+  },
+  brandingContainer: {
+    alignItems: "center",
+    marginBottom: 40,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#E8F4FD",
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: "rgba(49, 130, 206, 0.1)", // Trust Blue tinted
     justifyContent: "center",
     alignItems: "center",
-    alignSelf: "center",
-    marginBottom: 30,
+    marginBottom: 24,
   },
-  inputContainer: {
-    marginBottom: 20,
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#0F172A", // Deep Navy
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#64748B", // Slate
+    textAlign: "center",
+  },
+  formContainer: {
+    width: "100%",
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
-    color: "#03474f",
+    color: "#0F172A",
     marginBottom: 8,
+    paddingLeft: 4,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+    minHeight: 56,
+  },
+  inputContainerFocused: {
+    borderColor: "#3182CE",
+    backgroundColor: "#ffffff",
+    shadowColor: "#3182CE",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flex: 1,
+    height: 56,
+    width: "100%",
     fontSize: 16,
-    backgroundColor: "#fff",
+    color: "#0F172A",
   },
   button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#03474f",
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-    marginBottom: 20,
+    backgroundColor: "#0F172A", // Deep Navy
+    height: 56,
+    borderRadius: 16,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    marginBottom: 24,
   },
   buttonDisabled: {
-    backgroundColor: "#9aa9b1",
+    backgroundColor: "#94A3B8",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
-    marginRight: 10,
+    fontWeight: "700",
+    marginRight: 8,
   },
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 20,
+    marginBottom: 24,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#D1D5DB",
+    backgroundColor: "#E2E8F0",
   },
   dividerText: {
-    paddingHorizontal: 15,
-    color: "#6B7280",
+    paddingHorizontal: 16,
+    color: "#94A3B8",
     fontSize: 14,
+    fontWeight: "500",
   },
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
+    backgroundColor: "#ffffff",
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
   },
   googleButtonText: {
-    color: "#374151",
+    color: "#0F172A",
     fontSize: 16,
     fontWeight: "600",
-    marginLeft: 10,
+    marginLeft: 12,
   },
   footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    padding: 24,
+    alignItems: "center",
+    paddingBottom: Platform.OS === 'ios' ? 32 : 24,
   },
   footerText: {
     fontSize: 12,
-    color: "#6B7280",
+    color: "#94A3B8",
     textAlign: "center",
+    lineHeight: 18,
   },
 });

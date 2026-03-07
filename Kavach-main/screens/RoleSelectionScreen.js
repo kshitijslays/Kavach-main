@@ -6,6 +6,7 @@ import {
   Dimensions,
   Easing,
   Image,
+  Platform,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -56,79 +57,69 @@ export default function RoleSelectionScreen({ navigation }) {
           },
         ]}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={{
-                uri: "https://cdn-icons-png.flaticon.com/512/4476/4476952.png",
-              }}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-          <Text style={styles.title}>Kavach AI</Text>
-          <Text style={styles.subtitle}>
-            AI-powered safety that protects you proactively
-          </Text>
-        </View>
-
-        {/* Feature Cards */}
-        <View style={styles.cardsContainer}>
-          <View style={styles.card}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="mic" size={24} color="#d4105d" />
+        <View style={styles.topIllustration}>
+          {/* Abstract background styling */}
+          <View style={styles.glowCircle} />
+          
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Ionicons name="shield-checkmark" size={48} color="#fff" />
             </View>
-            <Text style={styles.cardTitle}>AI Listening</Text>
-            <Text style={styles.cardDesc}>
-              Detects distress signals instantly
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="camera" size={24} color="#d4105d" />
-            </View>
-            <Text style={styles.cardTitle}>Motion Detection</Text>
-            <Text style={styles.cardDesc}>
-              Tracks suspicious movements
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="hand-left" size={24} color="#d4105d" />
-            </View>
-            <Text style={styles.cardTitle}>Hands-free SOS</Text>
-            <Text style={styles.cardDesc}>
-              Automatic emergency response
+            <Text style={styles.title}>Shield AI</Text>
+            <Text style={styles.subtitle}>
+              Intelligent protection for your everyday journeys
             </Text>
           </View>
         </View>
 
-        {/* Bottom Section */}
-        <View style={styles.bottomSection}>
-          {/* Get Started Button */}
-          <TouchableOpacity
-            style={styles.getStartedButton}
-            onPress={handleGetStarted}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.getStartedText}>Get Started</Text>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
-          </TouchableOpacity>
+        {/* Bottom Sheet Section */}
+        <View style={styles.bottomSheet}>
+          <Text style={styles.sheetTitle}>Core Features</Text>
+          
+          <View style={styles.featuresList}>
+            <View style={styles.featureRow}>
+              <View style={[styles.iconBox, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="mic" size={20} color="#3B82F6" />
+              </View>
+              <View style={styles.featureText}>
+                <Text style={styles.featureTitle}>AI Listening</Text>
+                <Text style={styles.featureDesc}>Detects distress signals</Text>
+              </View>
+            </View>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Already have an account?{" "}
-              <Text
-                style={styles.footerLink}
-                onPress={() => navigation.navigate("Login")}
-              >
-                Sign In
+            <View style={styles.featureRow}>
+              <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}>
+                <Ionicons name="warning" size={20} color="#EF4444" />
+              </View>
+              <View style={styles.featureText}>
+                <Text style={styles.featureTitle}>Automated SOS</Text>
+                <Text style={styles.featureDesc}>Hands-free emergency response</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Actions */}
+          <View style={styles.bottomSection}>
+            <TouchableOpacity
+              style={styles.getStartedButton}
+              onPress={handleGetStarted}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.getStartedText}>Get Started</Text>
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>
+                Already have an account?{" "}
+                <Text
+                  style={styles.footerLink}
+                  onPress={() => navigation.navigate("Login")}
+                >
+                  Sign In
+                </Text>
               </Text>
-            </Text>
+            </View>
           </View>
         </View>
       </Animated.View>
@@ -139,110 +130,136 @@ export default function RoleSelectionScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#262626",
+    backgroundColor: "#0F172A",
   },
   content: {
     flex: 1,
     justifyContent: "space-between",
-    paddingHorizontal: 24,
+  },
+  // Top Half
+  topIllustration: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
     paddingTop: height * 0.05,
-    paddingBottom: 30,
+  },
+  glowCircle: {
+    position: 'absolute',
+    width: width * 1.5,
+    height: width * 1.5,
+    borderRadius: width * 0.75,
+    backgroundColor: '#1E293B',
+    top: -width * 0.5,
+    opacity: 0.5,
   },
   header: {
     alignItems: "center",
+    zIndex: 10,
   },
   logoContainer: {
-    backgroundColor: "#fff",
-    width: 85,
-    height: 85,
-    borderRadius: 42.5,
+    backgroundColor: "#3B82F6",
+    width: 90,
+    height: 90,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 14,
-    shadowColor: "#d4105d",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    marginBottom: 24,
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
     elevation: 8,
   },
-  logo: {
-    width: 50,
-    height: 50,
-  },
   title: {
-    fontSize: 30,
-    fontWeight: "bold",
+    fontSize: 36,
+    fontWeight: "800",
     color: "#fff",
-    marginBottom: 8,
+    marginBottom: 12,
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: 14,
-    color: "#aaa",
+    fontSize: 16,
+    color: "#94A3B8",
     textAlign: "center",
-    maxWidth: "85%",
-    lineHeight: 19,
+    lineHeight: 24,
+    maxWidth: "80%",
   },
-  cardsContainer: {
+
+  // Bottom Sheet Half
+  bottomSheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 28,
+    paddingTop: 36,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 20,
+  },
+  featuresList: {
+    marginBottom: 32,
+    gap: 16,
+  },
+  featureRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  card: {
-    width: "31%",
-    backgroundColor: "#333",
-    borderRadius: 14,
-    padding: 14,
     alignItems: "center",
+    backgroundColor: "#F8FAFC",
+    padding: 16,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#444",
+    borderColor: "#F1F5F9",
   },
-  iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "rgba(212, 16, 93, 0.15)",
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginRight: 16,
   },
-  cardTitle: {
-    fontSize: 12.5,
+  featureText: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
-    textAlign: "center",
-    marginBottom: 5,
+    color: "#0F172A",
+    marginBottom: 4,
   },
-  cardDesc: {
-    fontSize: 10.5,
-    color: "#999",
-    textAlign: "center",
-    lineHeight: 14,
+  featureDesc: {
+    fontSize: 13,
+    color: "#64748B",
   },
   bottomSection: {
-    gap: 20,
+    gap: 24,
   },
   getStartedButton: {
-    backgroundColor: "#d4105d",
-    paddingVertical: 15,
-    borderRadius: 12,
+    backgroundColor: "#0F172A",
+    paddingVertical: 18,
+    borderRadius: 16,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#d4105d",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
     elevation: 8,
   },
   getStartedText: {
     color: "#fff",
-    fontSize: 17,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: "700",
     marginRight: 8,
   },
   footer: {
@@ -250,10 +267,10 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: "#999",
+    color: "#64748B",
   },
   footerLink: {
-    color: "#d4105d",
-    fontWeight: "600",
+    color: "#3B82F6",
+    fontWeight: "700",
   },
 });

@@ -2,11 +2,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import HomeScreen from "../screens/HomeScreen";
 import LoginScreen from "../screens/LoginScreen";
 import OTPScreen from "../screens/otp";
-import VerificationSuccess from "../screens/VerificationSuccess";
 import TravelProfileScreen from "../screens/TravelProfileScreen";
-import KYCSimulation from "../screens/KYCSimulation";
 import TripDetails from "../screens/TripDetails";
-import DigitalId from "../screens/DigitalId";
+import TripDetails from "../screens/TripDetails";
 import PlaceDetail from "../screens/PlaceDetail";
 import ProfileScreen from "../screens/ProfileScreen";
 import ScanTourist from "../screens/ScanTourist";
@@ -39,29 +37,14 @@ export default function StackNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
-        name="VerificationSuccess"
-        component={VerificationSuccess}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
         name="TravelProfile"
         component={TravelProfileScreen}
         options={{ title: "Select Travel Profile" }}
       />
       <Stack.Screen
-        name="KYCSimulation"
-        component={KYCSimulation}
-        options={{ title: "KYC Verification" }}
-      />
-      <Stack.Screen
         name="TripDetails"
         component={TripDetails}
         options={{ title: "Trip Details" }}
-      />
-      <Stack.Screen
-        name="DigitalID"
-        component={DigitalId}
-        options={{ title: "Digital ID" }}
       />
       <Stack.Screen
         name="Home"

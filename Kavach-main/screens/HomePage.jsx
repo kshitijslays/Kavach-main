@@ -116,19 +116,21 @@ export default function HomeScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <StatusBar backgroundColor="#D4105D" barStyle="light-content" />
+      <StatusBar backgroundColor="#F8FAFC" barStyle="dark-content" />
       
-      {/* Top Bar */}
+      {/* Sleek Top Bar */}
       <View style={styles.topBar}>
-        <View style={styles.logoContainer}>
-          <Ionicons name="shield" size={24} color="#fff" />
-          <Text style={styles.logoText}>Kavach</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.greeting}>Hello, {userName}</Text>
+          <Text style={styles.subGreeting}>Stay safe with Shield</Text>
         </View>
         <TouchableOpacity 
           style={styles.profileButton}
           onPress={() => navigation.navigate("Profile")}
         >
-          <Ionicons name="person-circle" size={28} color="#fff" />
+          <View style={styles.avatarPlaceholder}>
+             <Ionicons name="person" size={20} color="#0F172A" />
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -137,64 +139,49 @@ export default function HomeScreen({ navigation, route }) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* User Greeting & Safety Status */}
-        <View style={styles.statusCard}>
-          <LinearGradient
-            colors={["#D4105D", "#B80D52"]}
-            style={styles.statusGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
+        {/* Modern Status Banner */}
+        <View style={styles.statusBanner}>
+          <View style={styles.statusBannerLeft}>
+            <View style={[styles.statusIndicator, { backgroundColor: isTracking ? "#10B981" : "#64748B" }]} />
+            <Text style={styles.statusBannerText}>{isTracking ? "Live Tracking Active" : "Tracking Paused"}</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.trackingToggle}
+            onPress={() => setIsTracking(!isTracking)}
           >
-            <View style={styles.greetingSection}>
-              <View>
-                <Text style={styles.greeting}>Hi, {userName} 👋</Text>
-                <Text style={styles.statusText}>{status.text}</Text>
-              </View>
-              <Ionicons name={status.icon} size={32} color={status.color} />
-            </View>
-            
-            <View style={styles.locationSection}>
-              <Ionicons name="location" size={16} color="#fff" />
-              <Text style={styles.locationText}>{location}</Text>
-              <View style={[
-                styles.trackingIndicator,
-                { backgroundColor: isTracking ? "#27AE60" : "#666" }
-              ]}>
-                <Text style={styles.trackingText}>
-                  {isTracking ? "LIVE" : "PAUSED"}
-                </Text>
-              </View>
-            </View>
-          </LinearGradient>
+            <Text style={styles.trackingToggleText}>{isTracking ? "Pause" : "Resume"}</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => (
-              <TouchableOpacity
-                key={action.id}
-                style={styles.quickAction}
-                onPress={action.onPress}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
-                  <Ionicons name={action.icon} size={24} color="#fff" />
-                </View>
-                <Text style={styles.actionText}>{action.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+        {/* Primary SOS Action Removed as per user request */}
+        <Text style={styles.sectionTitle}>Dashboard</Text>
+        <View style={styles.widgetGrid}>
+          {quickActions.map((action, i) => (
+            <TouchableOpacity
+              key={action.id}
+              style={styles.widgetCard}
+              onPress={action.onPress}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.widgetIconArea, { backgroundColor: i === 0 ? '#EFF6FF' : i === 1 ? '#FEF2F2' : i === 2 ? '#ECFDF5' : '#F8FAFC' }]}>
+                <Ionicons 
+                  name={action.icon} 
+                  size={24} 
+                  color={i === 0 ? '#3B82F6' : i === 1 ? '#EF4444' : i === 2 ? '#10B981' : '#64748B'} 
+                />
+              </View>
+              <Text style={styles.widgetTitle}>{action.name}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Safety Tips */}
         <View style={styles.tipsSection}>
           <Text style={styles.sectionTitle}>Safety Tips</Text>
-          {safetyTips.map((tip) => (
+          {safetyTips.map((tip, i) => (
             <TouchableOpacity key={tip.id} style={styles.tipCard} activeOpacity={0.7}>
-              <View style={styles.tipIcon}>
-                <Ionicons name={tip.icon} size={20} color="#D4105D" />
+              <View style={[styles.tipIcon, { backgroundColor: i === 0 ? '#FEF2F2' : i === 1 ? '#EFF6FF' : '#ECFDF5' }]}>
+                <Ionicons name={tip.icon} size={20} color={i === 0 ? '#EF4444' : i === 1 ? '#3B82F6' : '#10B981'} />
               </View>
               <View style={styles.tipContent}>
                 <Text style={styles.tipTitle}>{tip.title}</Text>
@@ -210,8 +197,8 @@ export default function HomeScreen({ navigation, route }) {
           <View style={styles.contactsSection}>
             <Text style={styles.sectionTitle}>Emergency Contacts</Text>
             <View style={styles.contactsPreview}>
-              {emergencyContacts.slice(0, 2).map((contact, index) => (
-                <View key={index} style={styles.contactItem}>
+              {emergencyContacts.slice(0, 2).map((contact, i) => (
+                <View key={i} style={styles.contactItem}>
                   <View style={styles.contactAvatar}>
                     <Text style={styles.contactInitial}>
                       {contact.name?.charAt(0)?.toUpperCase() || "C"}
@@ -237,30 +224,22 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* Safe Route Section */}
-        <View style={styles.safeRouteSection}>
-          <Text style={styles.sectionTitle}>Safe Navigation</Text>
+        {/* Safe Route Module Card */}
+        <View style={styles.safeRouteModule}>
+          <View style={styles.moduleHeader}>
+             <Ionicons name="map-outline" size={20} color="#0F172A" />
+             <Text style={styles.moduleTitle}>Safe Router</Text>
+          </View>
+          <Text style={styles.moduleDescription}>
+            Find the safest path to your destination avoiding high-risk zones.
+          </Text>
           <TouchableOpacity
-            style={styles.safeRouteCard}
+            style={styles.primaryButton}
             onPress={() => navigation.navigate('SafeRouteMap')}
-            activeOpacity={0.85}
+            activeOpacity={0.8}
           >
-            <View style={styles.safeRouteLeft}>
-              <View style={styles.safeRouteIconBg}>
-                <Ionicons name="map" size={28} color="#fff" />
-              </View>
-              <View style={styles.safeRouteText}>
-                <Text style={styles.safeRouteTitle}>Safe Route Finder</Text>
-                <Text style={styles.safeRouteSub}>Color-coded routes by safety level</Text>
-                <View style={styles.safeRouteLegendRow}>
-                  <View style={[styles.safeRouteDot, { backgroundColor: '#27AE60' }]} />
-                  <View style={[styles.safeRouteDot, { backgroundColor: '#F39C12' }]} />
-                  <View style={[styles.safeRouteDot, { backgroundColor: '#E74C3C' }]} />
-                  <Text style={styles.safeRouteLegendLabel}>Safe · Moderate · Danger</Text>
-                </View>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="#D4105D" />
+            <Text style={styles.primaryButtonText}>Open Map</Text>
+            <Ionicons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -273,14 +252,12 @@ export default function HomeScreen({ navigation, route }) {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={["#FFE8F0", "#fff"]}
+              colors={["#0F172A", "#1E293B"]}
               style={styles.digitalIdGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
             >
               <View style={styles.digitalIdHeader}>
-                <Ionicons name="id-card" size={24} color="#D4105D" />
-                <Text style={styles.digitalIdTitle}>Kavach Digital ID</Text>
+                <Ionicons name="id-card" size={24} color="#3B82F6" />
+                <Text style={styles.digitalIdTitle}>Shield Digital ID</Text>
               </View>
               <View style={styles.digitalIdContent}>
                 <Text style={styles.digitalIdName}>{userData?.name || "Tourist User"}</Text>
@@ -290,7 +267,7 @@ export default function HomeScreen({ navigation, route }) {
               </View>
               <View style={styles.digitalIdFooter}>
                 <Text style={styles.digitalIdText}>Tap to view full ID</Text>
-                <Ionicons name="qr-code" size={20} color="#D4105D" />
+                <Ionicons name="qr-code" size={20} color="#3B82F6" />
               </View>
             </LinearGradient>
           </TouchableOpacity>
@@ -303,216 +280,247 @@ export default function HomeScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F8FAFC", // Clean light slate background
   },
   container: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
-  // Top Bar
+  
+  // Clean Minimalist Top Bar
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#D4105D",
+    backgroundColor: "#F8FAFC",
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 12 : 12,
+    paddingVertical: 16,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 16 : 16,
   },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  logoText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-  profileButton: {
-    padding: 4,
-  },
-  // Status Card
-  statusCard: {
-    margin: 20,
-    borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  statusGradient: {
-    padding: 20,
-  },
-  greetingSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 15,
+  headerLeft: {
+    flexDirection: "column",
   },
   greeting: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 4,
+    fontWeight: "800",
+    color: "#0F172A",
   },
-  statusText: {
-    fontSize: 16,
-    color: "#fff",
-    opacity: 0.9,
-  },
-  locationSection: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  locationText: {
-    color: "#fff",
-    marginLeft: 6,
-    marginRight: 12,
+  subGreeting: {
     fontSize: 14,
-    flex: 1,
+    color: "#64748B",
+    marginTop: 2,
   },
-  trackingIndicator: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+  profileButton: {
+    padding: 0,
   },
-  trackingText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  // Quick Actions
-  quickActionsSection: {
-    marginHorizontal: 20,
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#262626",
-    marginBottom: 16,
-  },
-  quickActionsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  quickAction: {
-    alignItems: "center",
-    flex: 1,
-    marginHorizontal: 6,
-  },
-  actionIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  avatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  actionText: {
-    fontSize: 12,
-    color: "#262626",
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  // Safety Tips
-  tipsSection: {
+
+  // Modern Status Banner
+  statusBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
     marginHorizontal: 20,
-    marginBottom: 25,
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statusBannerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statusIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  statusBannerText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  trackingToggle: {
+    backgroundColor: "#F1F5F9",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  trackingToggleText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#0F172A",
+  },
+
+  // Massive SOS Button Area
+  sosContainer: {
+    alignItems: "center",
+    marginVertical: 32,
+  },
+  sosButton: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    shadowColor: "#EF4444",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  sosGradient: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 90,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 4,
+    borderColor: "#FEE2E2",
+  },
+  sosText: {
+    fontSize: 36,
+    fontWeight: "900",
+    color: "#fff",
+    marginTop: 4,
+    letterSpacing: 2,
+  },
+  sosSubtext: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.8)",
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
+  // Section Headers
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+
+  // Dashboard Widget Grid
+  widgetGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 16,
+    justifyContent: "space-between",
+    marginBottom: 24,
+  },
+  widgetCard: {
+    width: "48%",
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  widgetIconArea: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  widgetTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1E293B",
+  },
+
+  // Generic List Sections (Tips & Contacts)
+  tipsSection: {
+    marginBottom: 24,
   },
   tipCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
+    marginHorizontal: 20,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
+    borderColor: "#E2E8F0",
   },
   tipIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFE8F0",
+    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
   tipContent: {
     flex: 1,
   },
   tipTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#262626",
+    color: "#0F172A",
     marginBottom: 4,
   },
   tipDescription: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: "#64748B",
     lineHeight: 18,
   },
-  // Contacts Section
+  
   contactsSection: {
-    marginHorizontal: 20,
-    marginBottom: 25,
+    marginBottom: 24,
   },
   contactsPreview: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    marginHorizontal: 20,
+    borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
+    borderColor: "#E2E8F0",
   },
   contactItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   contactAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#D4105D",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#F1F5F9",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
   contactInitial: {
-    color: "#fff",
+    color: "#0F172A",
     fontWeight: "bold",
     fontSize: 16,
   },
@@ -520,141 +528,119 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#262626",
+    color: "#0F172A",
     marginBottom: 2,
   },
   contactNumber: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: "#64748B",
   },
   moreContacts: {
     alignItems: "center",
-    paddingVertical: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
   },
   moreContactsText: {
-    color: "#D4105D",
+    color: "#3B82F6",
     fontWeight: "600",
     fontSize: 14,
   },
-  // Safe Route Section
-  safeRouteSection: {
-    marginHorizontal: 20,
-    marginBottom: 25,
-  },
-  safeRouteCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+
+  // Safe Route Module
+  safeRouteModule: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
-  },
-  safeRouteLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  safeRouteIconBg: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#1a1a2e",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 14,
-  },
-  safeRouteText: {
-    flex: 1,
-  },
-  safeRouteTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#262626",
-    marginBottom: 2,
-  },
-  safeRouteSub: {
-    fontSize: 13,
-    color: "#666",
-    marginBottom: 6,
-  },
-  safeRouteLegendRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  safeRouteDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  safeRouteLegendLabel: {
-    fontSize: 11,
-    color: "#888",
-    marginLeft: 4,
-  },
-  // Digital ID Section
-  digitalIdSection: {
     marginHorizontal: 20,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginBottom: 24,
+  },
+  moduleHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  moduleTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginLeft: 8,
+  },
+  moduleDescription: {
+    fontSize: 14,
+    color: "#64748B",
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  primaryButton: {
+    backgroundColor: "#0F172A",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  primaryButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+    marginRight: 8,
+  },
+
+  // Digital ID Card
+  digitalIdSection: {
+    marginBottom: 40,
   },
   digitalIdCard: {
+    marginHorizontal: 20,
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
   },
   digitalIdGradient: {
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#FFE8F0",
+    padding: 24,
+    borderRadius: 16,
   },
   digitalIdHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
   digitalIdTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#262626",
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
     marginLeft: 10,
+    letterSpacing: 0.5,
   },
   digitalIdContent: {
-    marginBottom: 15,
+    marginBottom: 20,
   },
   digitalIdName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#262626",
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#fff",
     marginBottom: 4,
   },
   digitalIdType: {
-    fontSize: 16,
-    color: "#D4105D",
-    fontWeight: "600",
+    fontSize: 14,
+    color: "rgba(255,255,255,0.8)",
+    fontWeight: "500",
   },
   digitalIdFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.2)",
   },
   digitalIdText: {
     fontSize: 14,
-    color: "#666",
+    color: "rgba(255,255,255,0.9)",
     fontWeight: "500",
   },
 });

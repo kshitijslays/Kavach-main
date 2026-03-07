@@ -15,7 +15,7 @@ import VerificationSuccess from "./screens/VerificationSuccess";
 import TravelProfileScreen from "./screens/TravelProfileScreen";
 import KycSimulation from "./screens/KYCSimulation.jsx";
 import TripDetails from "./screens/TripDetails.jsx";
-import DigitalId from "./screens/DigitalId.jsx";
+import ProfileScreen from "./screens/ProfileScreen.jsx";
 import HomePage from "./screens/HomePage.jsx";
 import TabNavigator from "./navigations/TabNavigator.jsx";
 import MovementDetector from "./screens/MovementDetector.js"
@@ -48,14 +48,9 @@ export default function App() {
         <Stack.Screen name="TouristSignUp" component={TouristSignUpScreen} />
         <Stack.Screen name="AuthorityLogin" component={AuthorityLoginScreen} />
         <Stack.Screen name="OTP" component={OTPScreen} />
-        <Stack.Screen
-          name="VerificationSuccess"
-          component={VerificationSuccess}
-        />
-        <Stack.Screen name="TravelProfile" component={KycSimulation} />
-        <Stack.Screen name="KYCSimulation" component={TripDetails} />
+        <Stack.Screen name="TravelProfile" component={TravelProfileScreen} />
         <Stack.Screen name="TripDetails" component={TripDetails} />
-        <Stack.Screen name="DigitalID" component={DigitalId} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="MainTabs" component={TabNavigator} />
         <Stack.Screen name="SafeRouteMap" component={SafeRouteMap} />
       </Stack.Navigator>

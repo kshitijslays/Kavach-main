@@ -1,5 +1,5 @@
 {
-  "name": "myapptwo",
+  "name": "shield",
   "main": "index.jsx",
   "version": "1.0.0",
   "scripts": {
@@ -58,7 +58,8 @@
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.4.17",
     "web3": "^4.16.0",
-    "expo-local-authentication": "~16.0.5"
+    "expo-local-authentication": "~16.0.5",
+    "expo-sms": "~13.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

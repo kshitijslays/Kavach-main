@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function TripDetailsScreen({ navigation, route }) {
   const [name, setName] = useState("");
@@ -44,20 +45,33 @@ export default function TripDetailsScreen({ navigation, route }) {
     return true;
   };
 
-  const handleGenerateID = () => {
+  const handleGenerateID = async () => {
     if (validateForm()) {
-      console.log('📝 User details completed, generating Digital ID');
-      navigation.navigate("DigitalID", {
-        userData: {
-          name,
-          phone,
-          emergencyContacts: emergencyContacts.filter(
-            contact => contact.name.trim() && contact.number.trim()
-          )
-        },
-        profile: route.params?.profile,
-        selectedProfile: route.params?.selectedProfile,
-        kycCompleted: route.params?.kycCompleted
+      console.log('📝 User details completed, saving profile');
+      
+      const filteredContacts = emergencyContacts.filter(
+        contact => contact.name.trim() && contact.number.trim()
+      );
+
+      // Persist emergency contacts for background emergency detector
+      try {
+        await AsyncStorage.setItem('emergencyContacts', JSON.stringify(filteredContacts));
+        console.log('✅ Emergency contacts saved to AsyncStorage');
+      } catch (error) {
+        console.error('❌ Error saving emergency contacts:', error);
+      }
+
+      // Navigate directly to main app dashboard
+      navigation.navigate("MainTabs", {
+        screen: "Home",
+        params: {
+          userData: {
+            name,
+            phone,
+            emergencyContacts: filteredContacts
+          },
+          setupCompleted: true
+        }
       });
     }
   };
@@ -102,14 +116,14 @@ export default function TripDetailsScreen({ navigation, route }) {
               style={styles.backButton}
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name="arrow-back" size={24} color="#262626" />
+              <Ionicons name="arrow-back" size={24} color="#0F172A" />
             </TouchableOpacity>
             <Text style={styles.title}>Personal Details</Text>
             <View style={styles.placeholder} />
           </View>
 
           <Text style={styles.subtitle}>
-            Complete your profile information for your digital ID
+            Complete your profile information for automated emergency alerts
           </Text>
 
           {/* Personal Information Section */}
@@ -201,7 +215,7 @@ export default function TripDetailsScreen({ navigation, route }) {
                 style={styles.addContactButton}
                 onPress={addEmergencyContact}
               >
-                <Ionicons name="add-circle" size={20} color="#D4105D" />
+                <Ionicons name="add-circle" size={20} color="#3182CE" />
                 <Text style={styles.addContactText}>Add Another Contact</Text>
               </TouchableOpacity>
             )}
@@ -216,8 +230,8 @@ export default function TripDetailsScreen({ navigation, route }) {
             onPress={handleGenerateID}
             disabled={!name || !phone || !emergencyContacts.some(c => c.name && c.number)}
           >
-            <Ionicons name="id-card" size={22} color="#fff" />
-            <Text style={styles.buttonText}>Generate Digital ID</Text>
+            <Ionicons name="checkmark-circle-outline" size={22} color="#fff" />
+            <Text style={styles.buttonText}>Complete Profile</Text>
           </TouchableOpacity>
 
           <Text style={styles.securityNote}>
@@ -264,7 +278,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#262626",
+    color: "#0F172A",
     textAlign: "center",
   },
   subtitle: {
@@ -286,11 +300,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#262626",
+    color: "#0F172A",
   },
   contactCount: {
     fontSize: 14,
-    color: "#D4105D",
+    color: "#3182CE",
     fontWeight: "600",
   },
   sectionDescription: {
@@ -322,9 +336,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    paddingVertical: 16,
+    height: 56,
+    width: "100%",
     fontSize: 16,
-    color: "#262626",
+    color: "#0F172A",
   },
   emergencyContactCard: {
     backgroundColor: '#fff',
@@ -351,7 +366,7 @@ const styles = StyleSheet.create({
   contactNumber: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#262626",
+    color: "#0F172A",
   },
   removeButton: {
     padding: 4,
@@ -368,21 +383,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFE8F0',
+    backgroundColor: '#EFF6FF',
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#D4105D',
+    borderColor: '#3182CE',
     borderStyle: 'dashed',
   },
   addContactText: {
-    color: "#D4105D",
+    color: "#3182CE",
     fontWeight: "600",
     fontSize: 15,
     marginLeft: 8,
   },
   generateButton: {
-    backgroundColor: "#D4105D",
+    backgroundColor: "#0F172A",
     padding: 18,
     borderRadius: 12,
     flexDirection: 'row',
@@ -390,7 +405,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 10,
     marginBottom: 16,
-    shadowColor: "#D4105D",
+    shadowColor: "#0F172A",
     shadowOffset: {
       width: 0,
       height: 4,

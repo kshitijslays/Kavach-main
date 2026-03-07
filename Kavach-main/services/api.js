@@ -44,4 +44,8 @@ export const authAPI = {
     api.post('/auth/google-login', { idToken }),
 };
 
+export const emergencyAPI = {
+  triggerAlert: (data) => api.post('/emergency/alert', data),
+};
+
 export { config };

@@ -22,22 +22,21 @@ export default function TravelProfileScreen({ navigation }) {
       title: "Traveling Solo",
       icon: "person-outline",
       description: "Perfect for independent travelers",
-      // Add a screen property to specify which component to navigate to
-      screen: "KYCSimulation",
+      screen: "TripDetails",
     },
     {
       id: "family",
       title: "Traveling with Family",
       icon: "people-outline",
       description: "Safety features for group travel",
-      screen: "KYCSimulation", // Default KYC screen for other options
+      screen: "TripDetails",
     },
     {
       id: "international",
       title: "International Tourist",
       icon: "airplane-outline",
       description: "Special assistance for foreign visitors",
-      screen: "KYCSimulation", // Default KYC screen for other options
+      screen: "TripDetails",
     },
   ];
 

@@ -1,12 +1,10 @@
+import "./loadEnv.js";
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
-
-// Load environment variables
-dotenv.config();
+import emergencyRoutes from "./routes/emergencyRoutes.js";
 
 // Connect to database (but don't fail if connection fails)
 connectDB();
@@ -132,6 +130,9 @@ app.get("/test", (req, res) => {
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+
+// Emergency routes 🚨
+app.use("/api/emergency", emergencyRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

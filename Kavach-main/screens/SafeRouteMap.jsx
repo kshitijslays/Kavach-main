@@ -14,7 +14,7 @@ import {
   FlatList,
   Keyboard,
 } from "react-native";
-import MapView, { Polyline, Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Polyline, Marker, Circle, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 
@@ -451,133 +451,11 @@ export default function SafeRouteMapScreen({ navigation }) {
     <SafeAreaView style={styles.safe}>
       <StatusBar backgroundColor="#1a1a2e" barStyle="light-content" />
 
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.headerTitle}>Safe Route</Text>
-          <Text style={styles.headerSub}>Color-coded route safety</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <Ionicons name="shield-checkmark" size={24} color="#27AE60" />
-        </View>
-      </View>
-
-      {/* ── Source + Destination Inputs ── */}
-      <View style={styles.searchPanel}>
-        {/* Source Row */}
-        <View style={styles.inputRow}>
-          <View style={styles.dotGreen} />
-          {usingCurrentLocation ? (
-            <TouchableOpacity
-              style={styles.currentLocBtn}
-              onPress={() => {
-                setUsingCurrentLocation(false);
-                setSource("");
-                setRoutes([]);
-              }}
-            >
-              <Ionicons name="locate" size={14} color="#27AE60" />
-              <Text style={styles.currentLocText} numberOfLines={1}>{locationLabel}</Text>
-              <Ionicons name="close-circle" size={14} color="#aaa" />
-            </TouchableOpacity>
-          ) : (
-            <View style={{ flex: 1 }}>
-              <View style={styles.inputBox}>
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Type source address..."
-                  placeholderTextColor="#aaa"
-                  value={source}
-                  onChangeText={handleSourceChange}
-                  onFocus={() => { if (sourceSuggestions.length) setShowSourceSuggestions(true); setShowDestSuggestions(false); }}
-                  returnKeyType="next"
-                />
-                <TouchableOpacity onPress={handleUseCurrentLocation}>
-                  <Ionicons name="locate" size={18} color="#27AE60" />
-                </TouchableOpacity>
-              </View>
-              {/* Autocomplete for Source */}
-              {showSourceSuggestions && sourceSuggestions.length > 0 && (
-                <View style={styles.suggestionsWrapper}>
-                  {sourceSuggestions.map((item, i) => (
-                    <TouchableOpacity key={i} style={styles.suggestionItem} onPress={() => selectSource(item)}>
-                      <Ionicons name="location-outline" size={16} color="#aaa" />
-                      <Text style={styles.suggestionText} numberOfLines={1}>{item.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-
-        {/* Dotted line connector */}
-        <View style={styles.connector}>
-          <View style={styles.connectorDot} />
-          <View style={styles.connectorDot} />
-          <View style={styles.connectorDot} />
-        </View>
-
-        {/* Destination Row */}
-        <View style={styles.inputRow}>
-          <View style={styles.dotRed} />
-          <View style={{ flex: 1 }}>
-            <View style={styles.inputBox}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Enter destination address..."
-                placeholderTextColor="#aaa"
-                value={destination}
-                onChangeText={handleDestChange}
-                onFocus={() => { if (destSuggestions.length) setShowDestSuggestions(true); setShowSourceSuggestions(false); }}
-                onSubmitEditing={fetchRoutes}
-                returnKeyType="search"
-              />
-              {destination.length > 0 && (
-                <TouchableOpacity onPress={() => { setDestination(""); setRoutes([]); setShowDestSuggestions(false); }}>
-                  <Ionicons name="close-circle" size={18} color="#aaa" />
-                </TouchableOpacity>
-              )}
-            </View>
-            {/* Autocomplete for Destination */}
-            {showDestSuggestions && destSuggestions.length > 0 && (
-              <View style={styles.suggestionsWrapper}>
-                {destSuggestions.map((item, i) => (
-                  <TouchableOpacity key={i} style={styles.suggestionItem} onPress={() => selectDest(item)}>
-                    <Ionicons name="location-outline" size={16} color="#aaa" />
-                    <Text style={styles.suggestionText} numberOfLines={1}>{item.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Search Button */}
-        <TouchableOpacity
-          style={[styles.goBtn, loading && { opacity: 0.6 }]}
-          onPress={fetchRoutes}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="navigate" size={18} color="#fff" />
-              <Text style={styles.goBtnText}>Find Safe Routes</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* ── Map ── */}
+      {/* ── Map (Full Screen Background) ── */}
       <View style={styles.mapContainer}>
         {locationLoading ? (
           <View style={styles.mapPlaceholder}>
-            <ActivityIndicator size="large" color="#D4105D" />
+            <ActivityIndicator size="large" color="#3182CE" />
             <Text style={styles.mapPlaceholderText}>Getting your location…</Text>
           </View>
         ) : (
@@ -587,11 +465,11 @@ export default function SafeRouteMapScreen({ navigation }) {
             provider={PROVIDER_GOOGLE}
             initialRegion={initialRegion}
             showsUserLocation
-            showsMyLocationButton
+            showsMyLocationButton={false} // We custom position it or rely on the UI
           >
             {/* Draw Simulated Crime Zones */}
             {crimeZones.map((zone, i) => (
-              <MapView.Circle
+              <Circle
                 key={`zone_${i}`}
                 center={{ latitude: zone.latitude, longitude: zone.longitude }}
                 radius={zone.radius}
@@ -615,7 +493,7 @@ export default function SafeRouteMapScreen({ navigation }) {
                     key={`route_${routeIdx}_seg_${segIdx}`}
                     coordinates={seg.points}
                     strokeColor={isSelected ? sColor : sColor + "55"}
-                    strokeWidth={isSelected ? 6 : 3}
+                    strokeWidth={isSelected ? 6 : 4}
                     lineDashPattern={isSelected ? null : [6, 4]}
                     tappable={true}
                     onPress={() => setSelectedRoute(routeIdx)}
@@ -627,7 +505,7 @@ export default function SafeRouteMapScreen({ navigation }) {
 
             {/* Origin marker */}
             {userLocation && (
-              <Marker coordinate={userLocation} title="You are here" pinColor="#D4105D" />
+              <Marker coordinate={userLocation} title="You are here" pinColor="#3182CE" />
             )}
 
             {/* Destination marker */}
@@ -635,87 +513,207 @@ export default function SafeRouteMapScreen({ navigation }) {
               <Marker
                 coordinate={routes[0].destCoord}
                 title={destination || "Destination"}
-                pinColor="#262626"
+                pinColor="#0F172A"
               />
             )}
           </MapView>
         )}
       </View>
 
-      {/* ── Bottom Panel ── */}
-      {routes.length > 0 && (
-        <View style={styles.panel}>
-          <Text style={styles.panelTitle}>Available Routes</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.routeScroll}
-          >
-            {routes.map((route, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={[
-                  styles.routeCard,
-                  { borderColor: routeColor(idx) },
-                  idx === selectedRoute && {
-                    backgroundColor: routeColor(idx) + "1A",
-                  },
-                ]}
-                onPress={() => setSelectedRoute(idx)}
-              >
-                <View style={[styles.routeBadge, { backgroundColor: routeColor(idx) }]}>
-                  <Ionicons name={routeLabelIcon(idx)} size={14} color="#fff" />
-                  <Text style={styles.routeBadgeText}>{routeLabel(idx)}</Text>
-                </View>
-                <Text style={styles.routeSummary} numberOfLines={1}>
-                  {route.summary}
-                </Text>
-                <View style={styles.routeMeta}>
-                  <Ionicons name="time-outline" size={13} color="#666" />
-                  <Text style={styles.routeMetaText}>{route.durationText}</Text>
-                  <Ionicons name="navigate-outline" size={13} color="#666" style={{ marginLeft: 8 }} />
-                  <Text style={styles.routeMetaText}>{route.distanceText}</Text>
-                </View>
-                <View style={styles.safetyBar}>
-                  <View
-                    style={[
-                      styles.safetyFill,
-                      {
-                        width: `${route.score}%`,
-                        backgroundColor: routeColor(idx),
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={[styles.safetyScore, { color: routeColor(idx) }]}>
-                  Safety {route.score}%
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* Legend */}
-          <View style={styles.legend}>
-            {[0, 1, 2].map((i) => (
-              <View key={i} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: routeColor(i) }]} />
-                <Text style={styles.legendText}>{routeLabel(i)}</Text>
-              </View>
-            ))}
+      {/* ── Floating Top Card (Header + Inputs) ── */}
+      <View style={styles.topCardWrapper}>
+        <View style={styles.floatingHeader}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#0F172A" />
+          </TouchableOpacity>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Safe Route</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Ionicons name="shield-checkmark" size={24} color="#3182CE" />
           </View>
         </View>
-      )}
 
-      {/* Hint when no routes yet */}
-      {routes.length === 0 && !locationLoading && (
-        <View style={styles.hint}>
-          <Ionicons name="map-outline" size={28} color="#aaa" />
-          <Text style={styles.hintText}>
-            Type a destination above and tap {" "}
-            <Ionicons name="navigate" size={14} color="#D4105D" /> to see color-coded safe routes
-          </Text>
+        {/* Search Inputs */}
+        <View style={styles.searchContainer}>
+          {/* Source Row */}
+          <View style={styles.inputRow}>
+            <View style={styles.dotGreen} />
+            {usingCurrentLocation ? (
+              <TouchableOpacity
+                style={styles.currentLocBtn}
+                onPress={() => {
+                  setUsingCurrentLocation(false);
+                  setSource("");
+                  setRoutes([]);
+                }}
+              >
+                <Ionicons name="locate" size={16} color="#3182CE" />
+                <Text style={styles.currentLocText} numberOfLines={1}>{locationLabel}</Text>
+                <Ionicons name="close-circle" size={16} color="#94A3B8" />
+              </TouchableOpacity>
+            ) : (
+              <View style={{ flex: 1 }}>
+                <View style={styles.inputBox}>
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Start location..."
+                    placeholderTextColor="#94A3B8"
+                    value={source}
+                    onChangeText={handleSourceChange}
+                    onFocus={() => { if (sourceSuggestions.length) setShowSourceSuggestions(true); setShowDestSuggestions(false); }}
+                    returnKeyType="next"
+                  />
+                  <TouchableOpacity onPress={handleUseCurrentLocation}>
+                    <Ionicons name="locate" size={18} color="#3182CE" />
+                  </TouchableOpacity>
+                </View>
+                {/* Autocomplete for Source */}
+                {showSourceSuggestions && sourceSuggestions.length > 0 && (
+                  <View style={styles.suggestionsWrapper}>
+                    {sourceSuggestions.map((item, i) => (
+                      <TouchableOpacity key={i} style={styles.suggestionItem} onPress={() => selectSource(item)}>
+                        <Ionicons name="location-outline" size={16} color="#64748B" />
+                        <Text style={styles.suggestionText} numberOfLines={1}>{item.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+
+          {/* Dotted line connector */}
+          <View style={styles.connector}>
+            <View style={styles.connectorDot} />
+            <View style={styles.connectorDot} />
+            <View style={styles.connectorDot} />
+          </View>
+
+          {/* Destination Row */}
+          <View style={styles.inputRow}>
+            <View style={styles.dotRed} />
+            <View style={{ flex: 1 }}>
+              <View style={styles.inputBox}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Where to?"
+                  placeholderTextColor="#94A3B8"
+                  value={destination}
+                  onChangeText={handleDestChange}
+                  onFocus={() => { if (destSuggestions.length) setShowDestSuggestions(true); setShowSourceSuggestions(false); }}
+                  onSubmitEditing={fetchRoutes}
+                  returnKeyType="search"
+                />
+                {destination.length > 0 && (
+                  <TouchableOpacity onPress={() => { setDestination(""); setRoutes([]); setShowDestSuggestions(false); }}>
+                    <Ionicons name="close-circle" size={18} color="#94A3B8" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {/* Autocomplete for Destination */}
+              {showDestSuggestions && destSuggestions.length > 0 && (
+                <View style={styles.suggestionsWrapper}>
+                  {destSuggestions.map((item, i) => (
+                    <TouchableOpacity key={i} style={styles.suggestionItem} onPress={() => selectDest(item)}>
+                      <Ionicons name="location-outline" size={16} color="#64748B" />
+                      <Text style={styles.suggestionText} numberOfLines={1}>{item.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Search Button */}
+          {!routes.length && (
+            <TouchableOpacity
+              style={[styles.goBtn, loading && { opacity: 0.6 }]}
+              onPress={fetchRoutes}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Text style={styles.goBtnText}>Find Safe Routes</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
-      )}
+      </View>
+
+      {/* ── Floating Bottom Sheet Card (For route results) ── */}
+      <View style={styles.bottomSheetWrapper}>
+        {routes.length > 0 && (
+          <View style={styles.bottomSheetCard}>
+            {/* Handle */}
+            <View style={styles.sheetHandle} />
+
+          {/* ── Routes Result Panel ── */}
+            <View style={styles.panel}>
+              <View style={styles.panelHeaderRow}>
+                <Text style={styles.panelTitle}>Suggested Routes</Text>
+                {loading && <ActivityIndicator color="#3182CE" size="small" />}
+              </View>
+              
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.routeScroll}
+              >
+                {routes.map((route, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[
+                      styles.routeCard,
+                      { borderColor: routeColor(idx) },
+                      idx === selectedRoute && {
+                        backgroundColor: "rgba(255,255,255,1)",
+                        shadowColor: routeColor(idx),
+                        shadowOpacity: 0.15,
+                        elevation: 10,
+                        borderWidth: 2,
+                      },
+                      idx !== selectedRoute && {
+                        borderColor: "#E2E8F0",
+                      }
+                    ]}
+                    onPress={() => setSelectedRoute(idx)}
+                  >
+                    <View style={styles.cardTopRow}>
+                      <View style={[styles.routeBadge, { backgroundColor: routeColor(idx) }]}>
+                        <Text style={styles.routeBadgeText}>
+                           {idx === 0 ? "Safest" : `Option ${idx + 1}`}
+                        </Text>
+                      </View>
+                      <Text style={[styles.safetyScore, { color: routeColor(idx) }]}>
+                        {route.score}% Safe
+                      </Text>
+                    </View>
+                    
+                    <Text style={styles.routeSummary} numberOfLines={1}>
+                      {route.summary}
+                    </Text>
+                    
+                    <View style={styles.routeMeta}>
+                      <View style={styles.metaBadge}>
+                        <Ionicons name="time" size={14} color="#64748B" />
+                        <Text style={styles.routeMetaText}>{route.durationText}</Text>
+                      </View>
+                      <View style={styles.metaBadge}>
+                        <Ionicons name="navigate" size={14} color="#64748B" />
+                        <Text style={styles.routeMetaText}>{route.distanceText}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -723,278 +721,315 @@ export default function SafeRouteMapScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#F8FAFC",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + 12 : 12,
-    backgroundColor: "#1a1a2e",
+  mapContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#E2E8F0",
   },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.1)",
+  mapPlaceholder: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    backgroundColor: "#F1F5F9",
+    gap: 12,
+  },
+  mapPlaceholderText: {
+    color: "#64748B",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+
+  // Top Card Header
+  topCardWrapper: {
+    position: 'absolute',
+    top: Platform.OS === "android" ? StatusBar.currentHeight + 16 : 56,
+    left: 16,
+    right: 16,
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    paddingBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 8,
+    zIndex: 10,
+  },
+  floatingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  headerTitleContainer: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  headerSub: {
-    fontSize: 12,
-    color: "#aaa",
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#0F172A",
   },
   headerRight: {
-    marginLeft: "auto",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 0, // removed elevation since it's inside a bordered card now
   },
-  // Search Panel
-  searchPanel: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: "#1a1a2e",
+
+  // Bottom Sheet UI
+  bottomSheetWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  bottomSheetCard: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === "ios" ? 32 : 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 20,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#E2E8F0",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+
+  // Search Container
+  searchContainer: {
+    paddingHorizontal: 20,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 16,
   },
   dotGreen: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#27AE60",
-    borderWidth: 2,
-    borderColor: "#1a1a2e",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#10B981", // Emerald
+    borderWidth: 3,
+    borderColor: "rgba(16, 185, 129, 0.2)",
   },
   dotRed: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#E74C3C",
-    borderWidth: 2,
-    borderColor: "#1a1a2e",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#EF4444", // Red
+    borderWidth: 3,
+    borderColor: "rgba(239, 68, 68, 0.2)",
   },
   connector: {
-    marginLeft: 4,
+    marginLeft: 5,
     width: 2,
-    paddingVertical: 4,
+    paddingVertical: 6,
     alignItems: "center",
     gap: 4,
   },
   connectorDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: "#444",
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: "#CBD5E1",
   },
   inputBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2a2a40",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 46,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
   },
   searchInput: {
     flex: 1,
-    color: "#fff",
-    fontSize: 14,
+    color: "#0F172A",
+    fontSize: 15,
+    fontWeight: "500",
   },
   suggestionsWrapper: {
-    backgroundColor: "#2a2a40",
-    borderRadius: 8,
-    marginTop: 6,
-    paddingVertical: 4,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    marginTop: 8,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: "#3a3a50",
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+    position: 'absolute',
+    top: 56,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
   suggestionItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   suggestionText: {
-    color: "#e0e0e0",
-    fontSize: 13,
+    color: "#475569",
+    fontSize: 14,
     flex: 1,
   },
   currentLocBtn: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(39, 174, 96, 0.15)",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 46,
+    backgroundColor: "rgba(49, 130, 206, 0.08)",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
     borderWidth: 1,
-    borderColor: "rgba(39, 174, 96, 0.3)",
-    gap: 8,
+    borderColor: "rgba(49, 130, 206, 0.2)",
+    gap: 12,
   },
   currentLocText: {
     flex: 1,
-    color: "#27AE60",
-    fontSize: 14,
-    fontWeight: "500",
+    color: "#3182CE",
+    fontSize: 15,
+    fontWeight: "600",
   },
   goBtn: {
-    flexDirection: "row",
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: "#D4105D",
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "#0F172A",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 12,
-    gap: 8,
+    marginTop: 24,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   goBtnText: {
     color: "#fff",
-    fontSize: 15,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
   },
-  // Map
-  mapContainer: {
-    flex: 1,
-    backgroundColor: "#e8e8e8",
-  },
-  mapPlaceholder: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    gap: 12,
-  },
-  mapPlaceholderText: {
-    color: "#666",
-    fontSize: 14,
-  },
-  // Bottom Panel
+
+  // Bottom Panel (Routes)
   panel: {
-    backgroundColor: "#fff",
-    paddingTop: 16,
-    paddingBottom: Platform.OS === "ios" ? 24 : 16,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 12,
+    marginTop: 24,
+    paddingBottom: 8,
+  },
+  panelHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   panelTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#262626",
-    paddingHorizontal: 16,
-    marginBottom: 10,
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#0F172A",
   },
   routeScroll: {
-    paddingLeft: 16,
+    paddingLeft: 24,
   },
   routeCard: {
-    width: 170,
-    borderRadius: 14,
-    borderWidth: 2,
-    padding: 12,
-    marginRight: 12,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 3,
+    width: 240,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+    marginRight: 16,
+    backgroundColor: "#F8FAFC",
+  },
+  cardTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
   },
   routeBadge: {
-    flexDirection: "row",
-    alignItems: "center",
     borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    alignSelf: "flex-start",
-    marginBottom: 8,
-    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   routeBadgeText: {
     color: "#fff",
-    fontSize: 11,
-    fontWeight: "bold",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  safetyScore: {
+    fontSize: 14,
+    fontWeight: "800",
   },
   routeSummary: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#262626",
-    marginBottom: 6,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#0F172A",
+    marginBottom: 12,
   },
   routeMeta: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    gap: 8,
   },
-  routeMetaText: {
-    fontSize: 12,
-    color: "#666",
-    marginLeft: 3,
-  },
-  safetyBar: {
-    height: 6,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 3,
-    overflow: "hidden",
-    marginBottom: 4,
-  },
-  safetyFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-  safetyScore: {
-    fontSize: 11,
-    fontWeight: "bold",
-  },
-  legend: {
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    gap: 20,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendText: {
-    fontSize: 12,
-    color: "#666",
-  },
-  // No-routes hint
-  hint: {
+  metaBadge: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    margin: 16,
-    padding: 16,
-    borderRadius: 14,
-    gap: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    gap: 4,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: "#E2E8F0",
   },
-  hintText: {
-    flex: 1,
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
+  routeMetaText: {
+    fontSize: 12,
+    color: "#475569",
+    fontWeight: "600",
   },
 });

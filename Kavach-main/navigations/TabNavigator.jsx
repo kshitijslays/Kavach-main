@@ -1,9 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
+import { Platform, View, Text } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import HomePage from "../screens/HomePage";
-import DigitalId from '../screens/DigitalId';
+import ProfileScreen from '../screens/ProfileScreen';
 import SafeRouteMap from '../screens/SafeRouteMap';
 import ThreeSixtyDeg from '../screens/ThreeSixtyDeg';
 
@@ -14,7 +15,7 @@ export default function TabNavigator() {
     <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           let iconName;
 
           switch (route.name) {
@@ -22,7 +23,7 @@ export default function TabNavigator() {
               iconName = focused ? 'home' : 'home-outline';
               break;
             case 'LiveLocation':
-              iconName = focused ? 'location' : 'location-outline';
+              iconName = focused ? 'scan' : 'scan-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -34,20 +35,40 @@ export default function TabNavigator() {
               iconName = 'help-circle-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          // Modern pill active state for the icon
+          return (
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: focused ? 'rgba(49, 130, 206, 0.15)' : 'transparent',
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 20,
+              }}
+            >
+              <Ionicons name={iconName} size={22} color={color} />
+            </View>
+          );
         },
-        tabBarActiveTintColor: '#d4105d',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#3182CE', // Trust Blue
+        tabBarInactiveTintColor: '#94A3B8', // Slate 400
+        tabBarShowLabel: false, // Cleaner without labels, relying on pill highlight
         tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopWidth: 0.5,
-          elevation: 8,
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
-          shadowOffset: {
-            width: 0,
-            height: -3,
-          },
+          position: 'absolute',
+          bottom: Platform.OS === 'ios' ? 30 : 20,
+          left: 20,
+          right: 20,
+          backgroundColor: '#ffffff',
+          borderRadius: 30,
+          height: 64,
+          borderTopWidth: 0,
+          shadowColor: '#000',
+          shadowOpacity: 0.1,
+          shadowRadius: 15,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 10,
+          paddingBottom: 0, // Override default padding
         },
         headerShown: false,
       })}
@@ -55,30 +76,18 @@ export default function TabNavigator() {
       <Tab.Screen 
         name="Home" 
         component={HomePage}
-        options={{
-          tabBarLabel: 'Home'
-        }}
-      />
-      <Tab.Screen 
-        name="LiveLocation" 
-        component={ThreeSixtyDeg}
-        options={{
-          tabBarLabel: 'Live Location'
-        }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={DigitalId}
-        options={{
-          tabBarLabel: 'Profile'
-        }}
       />
       <Tab.Screen 
         name="SafeRoute" 
         component={SafeRouteMap}
-        options={{
-          tabBarLabel: 'Safe Route'
-        }}
+      />
+      <Tab.Screen 
+        name="LiveLocation" 
+        component={ThreeSixtyDeg}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
       />
     </Tab.Navigator>
   );

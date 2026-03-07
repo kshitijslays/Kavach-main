@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Platform, Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Platform, Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Speech from "expo-speech";
+import * as SMS from "expo-sms";
+import { emergencyAPI } from "../services/api";
 
 let Accelerometer, Location;
 if (Platform.OS !== "web") {
@@ -11,7 +14,7 @@ if (Platform.OS !== "web") {
 export default function MovementDetector() {
   const [lastAlert, setLastAlert] = useState(0);
   const [isAlerting, setIsAlerting] = useState(false);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(15);
 
   // Handle countdown timer
   useEffect(() => {
@@ -25,15 +28,89 @@ export default function MovementDetector() {
     return () => clearTimeout(timer);
   }, [isAlerting, countdown]);
 
+  const formatToE164 = (num) => {
+    const clean = num.replace(/[^\d+]/g, '');
+    if (clean.length === 10 && !clean.startsWith('+')) {
+      return `+91${clean}`;
+    }
+    return clean.startsWith('+') ? clean : `+${clean}`;
+  };
+
   const triggerEmergency = async () => {
     setIsAlerting(false);
     console.log("🚨 Emergency Alert Triggered!");
     try {
-      Speech.speak("Alert sent to trusted contacts!");
-      const location = await Location.getCurrentPositionAsync({});
-      console.log("Emergency Location Sent:", location.coords);
+      Speech.speak("Emergency activated. Contacting all trusted people automatically.");
+      
+      // 1. Get real-time location
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High
+      });
+      const { latitude, longitude } = location.coords;
+      console.log(`📍 Current Location: ${latitude}, ${longitude}`);
+      
+      // 2. Fetch all emergency contacts from storage
+      const contactsJson = await AsyncStorage.getItem('emergencyContacts');
+      const contacts = contactsJson ? JSON.parse(contactsJson) : [];
+      console.log(`📱 Found ${contacts.length} emergency contacts in storage`);
+      if (contacts.length > 0) {
+        console.log("👥 Contacts:", contacts.map(c => `${c.name}: ${c.number}`).join(", "));
+      }
+      
+      if (contacts.length > 0) {
+        // 3. TRIGGER BACKEND FOR ZERO-CLICK AUTOMATION 🚀
+        // This sends SMS and WhatsApp messages from the server, 
+        // requiring NO interaction from the user's phone.
+        try {
+          console.log("📡 Sending alert to backend...");
+          const result = await emergencyAPI.triggerAlert({
+            location: { latitude, longitude },
+            contacts: contacts,
+            message: "🚨 EMERGENCY ALERT: I may be in danger. Please check on me immediately."
+          });
+          
+          console.log("📊 Backend Alert Results:");
+          if (result.results) {
+            result.results.forEach(res => {
+              if (res.status === 'success') {
+                console.log(`   ✅ ${res.type} to ${res.contact}: SUCCESS`);
+              } else {
+                console.error(`   ❌ ${res.type} to ${res.contact}: FAILED - ${res.error}`);
+              }
+            });
+          }
+          
+          console.log("✅ Zero-click backend alerts processed!");
+        } catch (apiErr) {
+          console.error("❌ Backend alert failed:", apiErr.message);
+          if (apiErr.response) {
+            console.error("❌ API Error Data:", apiErr.response.data);
+          }
+          // Fallback to local SMS if backend fails
+          const phoneNumbers = contacts.map(c => c.number.replace(/\s/g, ''));
+          const isAvailable = await SMS.isAvailableAsync();
+          if (isAvailable) {
+            await SMS.sendSMSAsync(phoneNumbers, "🚨 EMERGENCY ALERT: I may be in danger. Please check on me immediately.");
+          }
+        }
+
+        // 4. Initiate Local Backup Phone Call
+        // Note: For the local phone dialer, using just digits (without +) 
+        // can sometimes be more reliable on certain Android devices.
+        const dialerNumber = contacts[0].number.replace(/[^\d]/g, ''); 
+        console.log(`📞 Opening local dialer for backup call: ${dialerNumber}`);
+        setTimeout(() => {
+          Linking.openURL(`tel:${dialerNumber}`);
+        }, 1500);
+
+      } else {
+        console.warn("No emergency contacts found to alert.");
+        Alert.alert("No Contacts", "Please add emergency contacts in your profile settings.");
+      }
+
     } catch(err) {
-      console.error(err);
+      console.error("Emergency Trigger Error:", err);
+      Speech.speak("Error triggering alert. Please call emergency services manually.");
     }
   };
 
@@ -73,9 +150,9 @@ export default function MovementDetector() {
         // Trigger if powerful shake and hasn't alerted in the last 45s, and currently not alerting
         if (magnitude > threshold && now - lastAlert > 45000 && !isAlerting) {
           setLastAlert(now);
-          setCountdown(30);
+          setCountdown(15);
           setIsAlerting(true);
-          Speech.speak("Sudden movement detected. Are you safe? You have 30 seconds to respond.");
+          Speech.speak("Sudden movement detected. Are you safe? You have 15 seconds to respond.");
         }
       });
     };

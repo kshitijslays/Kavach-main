@@ -11,7 +11,7 @@ export default function DigitalIDScreen({ navigation, route }) {
   const phoneNumber = userData?.phone || "Not provided";
   const emergencyContacts = userData?.emergencyContacts || [];
   const profileType = profile?.title || "Traveler";
-  const digitalId = `TID-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 100000)}`;
+  const digitalId = `SID-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 100000)}`;
 
   const getProfileIcon = () => {
     switch(profile) {
@@ -47,70 +47,72 @@ export default function DigitalIDScreen({ navigation, route }) {
           Your secure digital identification is ready
         </Text>
 
-        {/* Digital ID Card */}
-        <View style={styles.card}>
-          {/* Header Section */}
-          <View style={styles.cardHeader}>
-            <View style={styles.profileIconContainer}>
-              <Ionicons name={getProfileIcon()} size={24} color="#D4105D" />
+        {/* Digital ID Pass (Apple Wallet Style) */}
+        <View style={styles.walletPass}>
+          {/* Top Half: Dark Navy Header */}
+          <View style={styles.passHeader}>
+            <View style={styles.passHeaderTopRow}>
+              <View style={styles.profileIconContainer}>
+                <Ionicons name="shield-checkmark" size={20} color="#3B82F6" />
+              </View>
+              <Text style={styles.passTitle}>Shield Digital ID</Text>
             </View>
-            <Text style={styles.cardTitle}>Kavach Digital ID</Text>
-          </View>
 
-          {/* User Info Section */}
-          <View style={styles.userSection}>
-            <Image
-              source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
-              style={styles.avatar}
-            />
-            <View style={styles.userInfo}>
-              <Text style={styles.name}>{touristName}</Text>
-              <Text style={styles.profile}>{profileType} Profile</Text>
-            </View>
-          </View>
-
-          {/* ID Number */}
-          <View style={styles.idSection}>
-            <Ionicons name="id-card" size={16} color="#D4105D" />
-            <Text style={styles.idNumber}>ID: {digitalId}</Text>
-          </View>
-
-          {/* Contact Info */}
-          <View style={styles.infoSection}>
-            <View style={styles.infoRow}>
-              <Ionicons name="call" size={16} color="#666" />
-              <Text style={styles.infoText}>{phoneNumber}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Ionicons name="people" size={16} color="#666" />
-              <Text style={styles.infoText}>
-                {emergencyContacts.length} Emergency Contact{emergencyContacts.length !== 1 ? 's' : ''}
-              </Text>
-            </View>
-          </View>
-
-          {/* QR Code Section */}
-          <View style={styles.qrSection}>
-            <View style={styles.qrContainer}>
-              <QRCode 
-                value={JSON.stringify({
-                  id: digitalId,
-                  name: touristName,
-                  profile: profileType,
-                  phone: phoneNumber
-                })} 
-                size={140}
-                color="#262626"
-                backgroundColor="#FFE8F0"
+            <View style={styles.userSection}>
+              <View style={styles.userInfo}>
+                <Text style={styles.name}>{touristName}</Text>
+                <Text style={styles.profileBadge}>{profileType} Profile</Text>
+              </View>
+              <Image
+                source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+                style={styles.avatar}
               />
             </View>
-            <Text style={styles.qrText}>Scan for verification</Text>
           </View>
 
-          {/* Security Badge */}
-          <View style={styles.securitySection}>
-            <Ionicons name="shield-checkmark" size={14} color="#27AE60" />
-            <Text style={styles.securityText}>Verified & Secure</Text>
+          {/* Bottom Half: Bright Content & QR */}
+          <View style={styles.passBody}>
+            {/* ID Number */}
+            <View style={styles.idBadge}>
+              <Ionicons name="finger-print" size={16} color="#64748B" />
+              <Text style={styles.idNumber}>{digitalId}</Text>
+            </View>
+
+            {/* Contact Info Row */}
+            <View style={styles.infoGrid}>
+              <View style={styles.infoBlock}>
+                <Text style={styles.infoLabel}>PHONE</Text>
+                <Text style={styles.infoValue}>{phoneNumber}</Text>
+              </View>
+              <View style={styles.infoBlock}>
+                <Text style={styles.infoLabel}>CONTACTS</Text>
+                <Text style={styles.infoValue}>{emergencyContacts.length} Emergency</Text>
+              </View>
+            </View>
+
+            {/* QR Code Prominent Display */}
+            <View style={styles.qrSection}>
+              <View style={styles.qrContainer}>
+                <QRCode 
+                  value={JSON.stringify({
+                    id: digitalId,
+                    name: touristName,
+                    profile: profileType,
+                    phone: phoneNumber
+                  })} 
+                  size={160}
+                  color="#0F172A"
+                  backgroundColor="#fff"
+                />
+              </View>
+              <Text style={styles.qrText}>Scan to Verify Identity</Text>
+            </View>
+
+            {/* Security Footer */}
+            <View style={styles.securitySection}>
+              <Ionicons name="checkmark-done-circle" size={16} color="#10B981" />
+              <Text style={styles.securityText}>Verified Member</Text>
+            </View>
           </View>
         </View>
 
@@ -119,7 +121,6 @@ export default function DigitalIDScreen({ navigation, route }) {
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={() => {
-              console.log('🏁 Setup completed! Navigating to Home');
               navigation.navigate("MainTabs", {
                 setupCompleted: true,
                 profile: route.params?.profile,
@@ -135,11 +136,10 @@ export default function DigitalIDScreen({ navigation, route }) {
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={() => {
-              // Share functionality can be added here
               console.log('📤 Share Digital ID');
             }}
           >
-            <Ionicons name="share" size={20} color="#D4105D" />
+            <Ionicons name="share-outline" size={20} color="#0F172A" />
             <Text style={styles.secondaryButtonText}>Share ID</Text>
           </TouchableOpacity>
         </View>
@@ -155,213 +155,217 @@ export default function DigitalIDScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F8FAFC",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: "#f8f9fa",
+    paddingVertical: 16,
+    backgroundColor: "#F8FAFC",
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
-    paddingTop: 4,
+    paddingTop: 8,
     paddingBottom: 40,
   },
   backButton: {
     padding: 8,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 12,
   },
   placeholder: {
-    width: 24,
+    width: 40,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#262626",
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A",
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 15,
+    color: "#64748B",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 24,
     lineHeight: 22,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 24,
+
+  // Wallet Pass Layout
+  walletPass: {
     width: "100%",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    borderRadius: 24,
+    backgroundColor: "#fff",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 8,
-    marginBottom: 30,
+    shadowRadius: 32,
+    elevation: 12,
+    marginBottom: 32,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: "#f0f0f0",
+    borderColor: "#E2E8F0",
   },
-  cardHeader: {
+  passHeader: {
+    backgroundColor: "#0F172A",
+    padding: 24,
+    paddingBottom: 32,
+  },
+  passHeaderTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    marginBottom: 24,
   },
   profileIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFE8F0",
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.2)",
   },
-  cardTitle: {
+  passTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#262626",
+    fontWeight: "700",
+    color: "#fff",
+    letterSpacing: 0.5,
   },
   userSection: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginRight: 16,
-    borderWidth: 3,
-    borderColor: "#FFE8F0",
   },
   userInfo: {
     flex: 1,
   },
   name: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#262626",
-    marginBottom: 4,
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#fff",
+    marginBottom: 6,
   },
-  profile: {
-    fontSize: 16,
-    color: "#D4105D",
+  profileBadge: {
+    fontSize: 14,
+    color: "#94A3B8",
     fontWeight: "600",
   },
-  idSection: {
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: "#3B82F6",
+  },
+
+  // Pass Body
+  passBody: {
+    padding: 24,
+    backgroundColor: "#fff",
+  },
+  idBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFE8F0",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+    paddingVertical: 10,
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 24,
+    marginTop: -12, // Pull up slightly
   },
   idNumber: {
-    fontSize: 14,
-    color: "#262626",
-    fontWeight: "600",
+    fontSize: 15,
+    color: "#475569",
+    fontWeight: "700",
     marginLeft: 8,
+    letterSpacing: 1,
   },
-  infoSection: {
-    marginBottom: 24,
-  },
-  infoRow: {
+  infoGrid: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
+    justifyContent: "space-between",
+    marginBottom: 32,
+    paddingHorizontal: 8,
   },
-  infoText: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 8,
+  infoBlock: {
+    flex: 1,
   },
+  infoLabel: {
+    fontSize: 11,
+    color: "#94A3B8",
+    fontWeight: "700",
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: "#0F172A",
+    fontWeight: "600",
+  },
+  
   qrSection: {
     alignItems: "center",
-    marginBottom: 20,
-    padding: 20,
-    backgroundColor: "#FFE8F0",
-    borderRadius: 16,
+    marginBottom: 32,
   },
   qrContainer: {
     padding: 16,
     backgroundColor: "#fff",
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: 20,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
   },
   qrText: {
     fontSize: 14,
-    color: "#666",
+    color: "#64748B",
     fontWeight: "500",
   },
   securitySection: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
-    backgroundColor: "#f0f9f0",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#27AE60",
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
   },
   securityText: {
     fontSize: 14,
-    color: "#27AE60",
-    fontWeight: "600",
+    color: "#10B981",
+    fontWeight: "700",
     marginLeft: 6,
   },
+
+  // Actions Container
   actionsContainer: {
-    gap: 12,
-    marginBottom: 20,
+    gap: 16,
+    marginBottom: 24,
   },
   primaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#D4105D",
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    backgroundColor: "#0F172A",
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
     elevation: 6,
   },
   primaryButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "700",
     fontSize: 16,
     marginLeft: 8,
   },
@@ -369,24 +373,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#F8FAFC",
     paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#D4105D",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   secondaryButtonText: {
-    color: "#D4105D",
-    fontWeight: "bold",
+    color: "#0F172A",
+    fontWeight: "600",
     fontSize: 16,
     marginLeft: 8,
   },
   footerNote: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: "#94A3B8",
     textAlign: "center",
     lineHeight: 20,
-    fontStyle: "italic",
   },
 });

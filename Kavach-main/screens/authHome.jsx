@@ -349,71 +349,51 @@ const VerifiedTouristModal = ({ visible, onClose, tourist }) => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.idCard}>
-            <View style={styles.idCardHeader}>
-              <Image
-                source={require("../assets/government-logo.png")} // Add your government logo
-                style={styles.govLogo}
-                resizeMode="contain"
-              />
-              <Text style={styles.idCardHeaderText}>
-                Suraksha Kavach Digital ID
-              </Text>
-            </View>
+            {/* Apple Wallet Style Rebuild */}
+            <View style={styles.walletPass}>
+              <View style={styles.passHeader}>
+                <View style={styles.passHeaderTopRow}>
+                  <View style={styles.profileIconContainer}>
+                    <Ionicons name="shield-checkmark" size={20} color="#3B82F6" />
+                  </View>
+                  <Text style={styles.passTitle}>Shield Digital ID</Text>
+                </View>
 
-            <View style={styles.idCardBody}>
-              <Image
-                source={{ uri: tourist.imageUrl }}
-                style={styles.profilePic}
-              />
-
-              <View style={styles.touristInfo}>
-                <Text style={styles.touristName}>{tourist.name}</Text>
-                <Text style={styles.touristNationality}>
-                  {tourist.nationality}
-                </Text>
+                <View style={styles.userSection}>
+                  <View style={styles.userInfo}>
+                    <Text style={styles.name}>{tourist.name}</Text>
+                    <Text style={styles.profileBadge}>{tourist.nationality} Citizen</Text>
+                  </View>
+                  <Image
+                    source={{ uri: tourist.imageUrl }}
+                    style={styles.avatar}
+                  />
+                </View>
               </View>
 
-              <View style={styles.divider} />
+              <View style={styles.passBody}>
+                <View style={styles.idBadge}>
+                  <Ionicons name="finger-print" size={16} color="#64748B" />
+                  <Text style={styles.idNumber}>{tourist.passport}</Text>
+                </View>
 
-              <View style={styles.idDetails}>
-                <View style={styles.idDetailsRow}>
-                  <View style={styles.detailIconContainer}>
-                    <Ionicons name="document-text" size={16} color="#6C757D" />
+                <View style={styles.infoGrid}>
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoLabel}>VALID UNTIL</Text>
+                    <Text style={styles.infoValue}>{tourist.tripEnd}</Text>
                   </View>
-                  <View style={styles.detailTextContainer}>
-                    <Text style={styles.detailLabel}>Passport No.</Text>
-                    <Text style={styles.detailValue}>{tourist.passport}</Text>
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoLabel}>VERIFIED AT</Text>
+                    <Text style={styles.infoValue}>{tourist.verifiedAt}</Text>
                   </View>
                 </View>
 
-                <View style={styles.idDetailsRow}>
-                  <View style={styles.detailIconContainer}>
-                    <Ionicons name="calendar" size={16} color="#6C757D" />
-                  </View>
-                  <View style={styles.detailTextContainer}>
-                    <Text style={styles.detailLabel}>Valid Until</Text>
-                    <Text style={styles.detailValue}>{tourist.tripEnd}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.idDetailsRow}>
-                  <View style={styles.detailIconContainer}>
-                    <Ionicons name="time" size={16} color="#6C757D" />
-                  </View>
-                  <View style={styles.detailTextContainer}>
-                    <Text style={styles.detailLabel}>Verified At</Text>
-                    <Text style={styles.detailValue}>{tourist.verifiedAt}</Text>
-                  </View>
+                <View style={styles.securitySection}>
+                  <Ionicons name="checkmark-seal" size={16} color="#10B981" />
+                  <Text style={styles.securityText}>Verified Genuine Traveler</Text>
                 </View>
               </View>
             </View>
-
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={20} color="#fff" />
-              <Text style={styles.verifiedText}>GENUINE TRAVELER</Text>
-            </View>
-          </View>
 
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.secondaryButton} onPress={onClose}>
@@ -1551,98 +1531,130 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#1D2939",
-    marginLeft: 8,
+  // Wallet Pass Layout
+  walletPass: {
+    width: "100%",
+    borderRadius: 24,
+    backgroundColor: "#fff",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.1,
+    shadowRadius: 32,
+    elevation: 12,
+    marginBottom: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  idCard: {
+  passHeader: {
+    backgroundColor: "#0F172A",
     padding: 24,
-    alignItems: "center",
+    paddingBottom: 32,
   },
-  idCardHeader: {
+  passHeaderTopRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 24,
   },
-  govLogo: {
-    width: 40,
-    height: 40,
+  profileIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 12,
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.2)",
   },
-  idCardHeaderText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1D2939",
+  passTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#fff",
+    letterSpacing: 0.5,
   },
-  idCardBody: {
-    width: "100%",
-    alignItems: "center",
-  },
-  profilePic: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: "#03474f",
-    marginBottom: 16,
-  },
-  touristInfo: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  touristName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1D2939",
-    marginBottom: 4,
-  },
-  touristNationality: {
-    fontSize: 16,
-    color: "#6C757D",
-  },
-  divider: {
-    width: "100%",
-    height: 1,
-    backgroundColor: "#E9ECEF",
-    marginBottom: 20,
-  },
-  idDetails: {
-    width: "100%",
-  },
-  idDetailsRow: {
+  userSection: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  detailIconContainer: {
-    width: 32,
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  detailTextContainer: {
+  userInfo: {
     flex: 1,
   },
-  detailLabel: {
+  name: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#fff",
+    marginBottom: 6,
+  },
+  profileBadge: {
     fontSize: 14,
-    color: "#6C757D",
-    marginBottom: 2,
+    color: "#94A3B8",
+    fontWeight: "600",
   },
-  detailValue: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#1D2939",
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    borderColor: "#3B82F6",
   },
-  verifiedBadge: {
+  passBody: {
+    padding: 24,
+    backgroundColor: "#fff",
+  },
+  idBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#28A745",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    marginTop: 16,
+    justifyContent: "center",
+    backgroundColor: "#F1F5F9",
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginBottom: 24,
+    marginTop: -12,
   },
-  verifiedText: {
-    color: "#fff",
-    fontWeight: "bold",
+  idNumber: {
+    fontSize: 15,
+    color: "#475569",
+    fontWeight: "700",
     marginLeft: 8,
+    letterSpacing: 1,
+  },
+  infoGrid: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 32,
+    paddingHorizontal: 8,
+  },
+  infoBlock: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: "#94A3B8",
+    fontWeight: "700",
+    marginBottom: 4,
     letterSpacing: 0.5,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: "#0F172A",
+    fontWeight: "600",
+  },
+  securitySection: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#F1F5F9",
+  },
+  securityText: {
+    fontSize: 14,
+    color: "#10B981",
+    fontWeight: "700",
+    marginLeft: 6,
+  },  letterSpacing: 0.5,
   },
   modalActions: {
     flexDirection: "row",

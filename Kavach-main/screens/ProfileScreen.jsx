@@ -1,200 +1,318 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Switch } from 'react-native';
-import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation, route }) {
+  const [userData, setUserData] = useState({
+    name: route.params?.userData?.name || "Member",
+    phone: route.params?.userData?.phone || "Not linked",
+    emergencyContacts: route.params?.userData?.emergencyContacts || []
+  });
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const contactsJson = await AsyncStorage.getItem('emergencyContacts');
+      if (contactsJson) {
+        const contacts = JSON.parse(contactsJson);
+        setUserData(prev => ({ ...prev, emergencyContacts: contacts }));
+      }
+    } catch (error) {
+      console.error('❌ Error loading profile data:', error);
+    }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out from Shield?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Sign Out", 
+          style: "destructive", 
+          onPress: () => navigation.replace("RoleSelection") 
+        }
+      ]
+    );
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Profile Header with Background */}
-      <View style={styles.profileHeader}>
-        <View style={styles.profileImageContainer}>
-          <FontAwesome name="user-circle" size={90} color="#E23744" />
-        </View>
-        <Text style={styles.profileName}>Kshitij</Text>
-        <Text style={styles.profileEmail}>kshitij123@gmail.com</Text>
-      </View>
-
-      {/* Premium Card */}
-      <View style={styles.premiumCard}>
-        <View style={styles.premiumBadge}>
-          <MaterialIcons name="workspace-premium" size={20} color="#d1ab00" />
-          <Text style={styles.premiumBadgeText}>GOLD MEMBER</Text>
-        </View>
-        <Text style={styles.premiumTitle}>Enjoy exclusive benefits!</Text>
-        <Text style={styles.premiumBenefit}>• Free delivery on all orders</Text>
-        <Text style={styles.premiumBenefit}>• Priority customer support</Text>
-        <Text style={styles.premiumBenefit}>• Special discounts</Text>
-        <TouchableOpacity style={styles.upgradeButton}>
-          <Text style={styles.upgradeButtonText}>UPGRADE BENEFITS</Text>
+    <SafeAreaView style={styles.safeContainer}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity style={styles.settingsButton}>
+          <Ionicons name="settings-outline" size={24} color="#0F172A" />
         </TouchableOpacity>
       </View>
 
-      {/* Settings Section */}
-      <View style={styles.settingsSection}>
-        <Text style={styles.sectionTitle}>ACCOUNT SETTINGS</Text>
-        
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingIcon}>
-            <Ionicons name="person-outline" size={22} color="#E23744" />
-          </View>
-          <Text style={styles.settingText}>My Account</Text>
-          <Ionicons name="chevron-forward" size={18} color="#999" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingIcon}>
-            <Ionicons name="fast-food-outline" size={22} color="#E23744" />
-          </View>
-          <Text style={styles.settingText}>My Orders</Text>
-          <Ionicons name="chevron-forward" size={18} color="#999" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingIcon}>
-            <Ionicons name="wallet-outline" size={22} color="#E23744" />
-          </View>
-          <Text style={styles.settingText}>Payments</Text>
-          <Ionicons name="chevron-forward" size={18} color="#999" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.settingItem}>
-          <View style={styles.settingIcon}>
-            <Ionicons name="heart-outline" size={22} color="#E23744" />
-          </View>
-          <Text style={styles.settingText}>Favorites</Text>
-          <Ionicons name="chevron-forward" size={18} color="#999" />
-        </TouchableOpacity>
-
-        <View style={styles.settingItem}>
-          <View style={styles.settingIcon}>
-            <Ionicons name="moon-outline" size={22} color="#E23744" />
-          </View>
-          <Text style={styles.settingText}>Dark Mode</Text>
-          <Switch 
-            trackColor={{ false: "#ddd", true: "#E23744" }}
-            thumbColor="#fff"
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* User Card */}
+        <View style={styles.userCard}>
+          <Image
+            source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+            style={styles.avatar}
           />
+          <View style={styles.userMeta}>
+            <Text style={styles.userName}>{userData.name}</Text>
+            <View style={styles.verifiedBadge}>
+              <Ionicons name="checkmark-seal" size={14} color="#3B82F6" />
+              <Text style={styles.verifiedText}>Shield Verified</Text>
+            </View>
+          </View>
         </View>
-      </View>
 
-      {/* App Version */}
-      <Text style={styles.versionText}>FoodApp v2.4.1</Text>
-    </View>
+        {/* Info Sections */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>ACCOUNT DETAILS</Text>
+          <View style={styles.infoRow}>
+            <View style={styles.iconBox}>
+              <Ionicons name="call-outline" size={20} color="#64748B" />
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>Phone Number</Text>
+              <Text style={styles.infoValue}>{userData.phone}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>EMERGENCY CONTACTS ({userData.emergencyContacts.length})</Text>
+          {userData.emergencyContacts.length > 0 ? (
+            userData.emergencyContacts.map((contact, index) => (
+              <View key={index} style={styles.contactRow}>
+                <View style={[styles.iconBox, { backgroundColor: '#EFF6FF' }]}>
+                  <Ionicons name="person" size={18} color="#3B82F6" />
+                </View>
+                <View style={styles.infoContent}>
+                  <Text style={styles.contactName}>{contact.name}</Text>
+                  <Text style={styles.contactPhone}>{contact.number}</Text>
+                </View>
+                <TouchableOpacity 
+                   onPress={() => Alert.alert("Emergency Contact", `Primary contact: ${contact.name}`)}
+                >
+                   <Ionicons name="information-circle-outline" size={20} color="#94A3B8" />
+                </TouchableOpacity>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>No emergency contacts added yet.</Text>
+          )}
+        </View>
+
+        {/* Security / App Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>SECURITY & APP</Text>
+          <TouchableOpacity style={styles.menuItem}>
+            <Ionicons name="shield-half-outline" size={20} color="#64748B" />
+            <Text style={styles.menuText}>Safety Privacy</Text>
+            <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <Ionicons name="notifications-outline" size={20} color="#64748B" />
+            <Text style={styles.menuText}>Emergency Alerts Settings</Text>
+            <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <Ionicons name="help-buoy-outline" size={20} color="#64748B" />
+            <Text style={styles.menuText}>Support Center</Text>
+            <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.versionText}>Shield v1.0.4 • Secure Travel Identification</Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeContainer: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#F8FAFC',
   },
-  profileHeader: {
-    backgroundColor: '#fff',
-    padding: 25,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  profileImageContainer: {
-    marginBottom: 15,
-  },
-  profileName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  profileEmail: {
-    fontSize: 15,
-    color: '#777',
-  },
-  premiumCard: {
-    backgroundColor: '#fff',
-    margin: 15,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  premiumBadge: {
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff8e1',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 15,
-  },
-  premiumBadgeText: {
-    color: '#d1ab00',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginLeft: 5,
-  },
-  premiumTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  premiumBenefit: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 8,
-    marginLeft: 5,
-  },
-  upgradeButton: {
-    backgroundColor: '#E23744',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 15,
-    alignItems: 'center',
-  },
-  upgradeButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  settingsSection: {
-    backgroundColor: '#fff',
-    marginTop: 10,
-    paddingHorizontal: 15,
-  },
-  sectionTitle: {
-    color: '#999',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 15,
-    marginLeft: 10,
-    letterSpacing: 1,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#F1F5F9',
+    backgroundColor: '#fff',
   },
-  settingIcon: {
-    width: 30,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  settingsButton: {
+    padding: 4,
+  },
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 24,
+    paddingBottom: 100, // For the floating tab bar
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 24,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    marginRight: 16,
+    backgroundColor: '#F1F5F9',
+  },
+  userMeta: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  settingText: {
+  verifiedText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#3B82F6',
+    marginLeft: 4,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+    marginBottom: 16,
+    letterSpacing: 1,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  contactName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  contactPhone: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#94A3B8',
+    fontStyle: 'italic',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  menuText: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
-    marginLeft: 10,
+    fontWeight: '600',
+    color: '#334155',
+    marginLeft: 16,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    borderRadius: 16,
+    backgroundColor: '#FEF2F2',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  logoutText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#EF4444',
+    marginLeft: 8,
   },
   versionText: {
     textAlign: 'center',
-    color: '#999',
-    marginTop: 30,
-    marginBottom: 20,
     fontSize: 12,
+    color: '#CBD5E1',
+    marginTop: 32,
+    fontWeight: '500',
   },
 });

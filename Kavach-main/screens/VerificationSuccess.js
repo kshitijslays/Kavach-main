@@ -68,7 +68,7 @@ export default function VerificationSuccess({ navigation, route }) {
           <Text style={styles.title}>Verification Successful!</Text>
           
           <Text style={styles.subtitle}>
-            Welcome to <Text style={styles.brandText}>Kavach</Text>. Your email has been successfully verified and your account is now secure.
+            Welcome to <Text style={styles.brandText}>Shield</Text>. Your email has been successfully verified and your account is now secure.
           </Text>
           
           <View style={styles.emailContainer}>

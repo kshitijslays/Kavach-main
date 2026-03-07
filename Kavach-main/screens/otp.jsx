@@ -12,7 +12,8 @@ import {
   Animated,
   Easing,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  ScrollView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { authAPI } from '../services/api';
@@ -101,10 +102,10 @@ export default function OTPScreen({ navigation, route }) {
         }
         
         // Navigate directly without alert for better UX
-        console.log('🎉 Navigating to success screen...');
-        navigation.navigate('VerificationSuccess', {
-          email: email,
-          nextScreen: 'TravelProfile' // Can be customized based on user type
+        console.log('🎉 Navigating to next screen...');
+        navigation.navigate('TripDetails', {
+          userEmail: email,
+          fromVerification: true
         });
       } catch (error) {
         console.error('❌ Verify OTP Error:', error);
@@ -195,24 +196,31 @@ export default function OTPScreen({ navigation, route }) {
   return (
     <SafeAreaView style={styles.safeContainer}>
       <KeyboardAvoidingView 
+        style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#262626" />
-          </TouchableOpacity>
-          <Text style={styles.title}>OTP Verification</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        <View style={styles.content}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="lock-closed" size={50} color="#D4105D" />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#0F172A" />
+            </TouchableOpacity>
+            <Text style={styles.title}>OTP Verification</Text>
+            <View style={styles.placeholder} />
           </View>
+
+          <View style={styles.content}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="lock-closed" size={50} color="#3182CE" />
+            </View>
           
           <Text style={styles.subtitle}>
             Enter Verification Code
@@ -282,13 +290,14 @@ export default function OTPScreen({ navigation, route }) {
           </View>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            By continuing, you agree to our{" "}
-            <Text style={styles.highlightText}>Terms of Service</Text> and{" "}
-            <Text style={styles.highlightText}>Privacy Policy</Text>
-          </Text>
-        </View>
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              By continuing, you agree to our{" "}
+              <Text style={styles.highlightText}>Terms of Service</Text> and{" "}
+              <Text style={styles.highlightText}>Privacy Policy</Text>
+            </Text>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -297,197 +306,175 @@ export default function OTPScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#ffffff",
   },
-  container: {
+  keyboardView: {
     flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "space-between",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
-    paddingTop: Platform.OS === 'android' ? 20 : 0,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? 40 : 20,
+    paddingBottom: 10,
   },
   backButton: {
-    padding: 8,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "flex-start",
   },
   placeholder: {
-    width: 24,
+    width: 40,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#262626",
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#0F172A", // Deep Navy
   },
   content: {
     flex: 1,
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 32,
     justifyContent: "center",
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#FFE8F0",
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    backgroundColor: "rgba(49, 130, 206, 0.1)", // Trust Blue tinted
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 25,
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    marginBottom: 24,
   },
   subtitle: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 12,
-    color: "#262626",
+    fontSize: 28,
+    fontWeight: "800",
+    marginBottom: 8,
+    color: "#0F172A",
     textAlign: "center",
   },
   message: {
     fontSize: 16,
-    color: "#666",
+    color: "#64748B",
     marginBottom: 8,
     textAlign: "center",
     lineHeight: 22,
+    paddingHorizontal: 20,
   },
   emailText: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#D4105D",
+    fontWeight: "700",
+    color: "#3182CE", // Trust Blue
     marginBottom: 40,
     textAlign: "center",
   },
   otpContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: width * 0.8,
-    marginBottom: 35,
+    width: width * 0.85,
+    marginBottom: 32,
   },
   otpInput: {
-    width: 55,
-    height: 55,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
+    width: 50,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
     textAlign: "center",
-    fontSize: 22,
-    fontWeight: "bold",
-    backgroundColor: "#fff",
-    color: "#262626",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    fontSize: 24,
+    fontWeight: "700",
+    backgroundColor: "#F8FAFC",
+    color: "#0F172A",
   },
   otpInputFilled: {
-    borderColor: "#D4105D",
-    backgroundColor: "#FFE8F0",
-    shadowColor: "#D4105D",
+    borderColor: "#3182CE",
+    backgroundColor: "#ffffff",
+    shadowColor: "#3182CE",
     shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 4,
   },
   otpInputFocused: {
-    borderColor: "#D4105D",
-    backgroundColor: "#fff",
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    borderColor: "#3182CE",
+    backgroundColor: "#ffffff",
+    shadowColor: "#3182CE",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 4,
   },
   button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#D4105D",
-    paddingVertical: 18,
-    paddingHorizontal: 30,
-    borderRadius: 12,
+    backgroundColor: "#0F172A", // Deep Navy
+    height: 56,
+    borderRadius: 16,
     width: "100%",
-    marginBottom: 25,
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
+    marginBottom: 24,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
   },
   buttonDisabled: {
-    backgroundColor: "#ccc",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: "#94A3B8",
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 17,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
     marginRight: 8,
   },
   buttonIcon: {
-    marginLeft: 4,
+    marginLeft: 0,
   },
   resendContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     flexWrap: "wrap",
+    marginTop: 8,
   },
   timerText: {
     fontSize: 14,
-    color: "#666",
+    color: "#64748B",
   },
   timerCount: {
     fontSize: 14,
-    color: "#D4105D",
+    color: "#3182CE", // Trust Blue
     fontWeight: "600",
   },
   resendText: {
     fontSize: 14,
-    color: "#D4105D",
-    fontWeight: "bold",
+    color: "#3182CE", // Trust Blue
+    fontWeight: "700",
     textDecorationLine: "underline",
   },
   footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    padding: 24,
+    alignItems: "center",
+    paddingBottom: Platform.OS === 'ios' ? 32 : 24,
   },
   footerText: {
     fontSize: 12,
-    color: "#666",
+    color: "#94A3B8",
     textAlign: "center",
     lineHeight: 18,
   },
   highlightText: {
-    color: "#D4105D",
+    color: "#0F172A",
     fontWeight: "600",
   },
 });

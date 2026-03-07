@@ -25,7 +25,7 @@ export default function HomeScreen({ route }) {
       {setupCompleted && (
         <View style={styles.welcomeBanner}>
           <Text style={styles.welcomeText}>
-            🎉 Welcome to Kavach! Your {profile?.title || 'travel'} setup is complete.
+            🎉 Welcome to Shield! Your {profile?.title || 'travel'} setup is complete.
           </Text>
         </View>
       )}
