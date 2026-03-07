@@ -3,6 +3,7 @@ import React from "react";
 import { Platform } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import * as Location from "expo-location";
 
 // Import screens
 import authHome from "./screens/authHome.jsx"; // Make sure path is correct
@@ -25,6 +26,13 @@ import SafeRouteMap from "./screens/SafeRouteMap";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  React.useEffect(() => {
+    (async () => {
+      // Request location permissions as soon as the app starts
+      await Location.requestForegroundPermissionsAsync();
+    })();
+  }, []);
+
   return (
     <NavigationContainer>
       <MovementDetector />

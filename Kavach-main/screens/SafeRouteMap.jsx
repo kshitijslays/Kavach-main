@@ -11,6 +11,8 @@ import {
   Platform,
   StatusBar,
   ScrollView,
+  FlatList,
+  Keyboard,
 } from "react-native";
 import MapView, { Polyline, Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +32,27 @@ async function geocodePlace(text) {
   const [lng, lat] = data.features[0].geometry.coordinates;
   const label = data.features[0].properties.label || text;
   return { latitude: lat, longitude: lng, label };
+}
+
+// Fetch autocomplete suggestions
+async function fetchSuggestions(text) {
+  if (!text || text.length < 3) return [];
+  const url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${ORS_API_KEY}&text=${encodeURIComponent(text)}&size=5`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.features) return [];
+    return data.features.map(f => {
+      const [lng, lat] = f.geometry.coordinates;
+      return {
+        label: f.properties.label || f.properties.name || text,
+        latitude: lat,
+        longitude: lng
+      };
+    });
+  } catch (err) {
+    return [];
+  }
 }
 
 // Decode Google's encoded polyline format into lat/lng array
@@ -121,6 +144,12 @@ export default function SafeRouteMapScreen({ navigation }) {
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationLabel, setLocationLabel] = useState("Current Location"); // display label
 
+  // Autocomplete states
+  const [sourceSuggestions, setSourceSuggestions] = useState([]);
+  const [destSuggestions, setDestSuggestions] = useState([]);
+  const [showSourceSuggestions, setShowSourceSuggestions] = useState(false);
+  const [showDestSuggestions, setShowDestSuggestions] = useState(false);
+
   // Request and fetch user location on mount
   useEffect(() => {
     (async () => {
@@ -160,6 +189,43 @@ export default function SafeRouteMapScreen({ navigation }) {
     setSource("");
     setUsingCurrentLocation(true);
     setRoutes([]);
+    setShowSourceSuggestions(false);
+  };
+
+  const handleSourceChange = async (text) => {
+    setSource(text);
+    setRoutes([]);
+    if (text.length >= 3) {
+      const results = await fetchSuggestions(text);
+      setSourceSuggestions(results);
+      setShowSourceSuggestions(true);
+    } else {
+      setShowSourceSuggestions(false);
+    }
+  };
+
+  const handleDestChange = async (text) => {
+    setDestination(text);
+    setRoutes([]);
+    if (text.length >= 3) {
+      const results = await fetchSuggestions(text);
+      setDestSuggestions(results);
+      setShowDestSuggestions(true);
+    } else {
+      setShowDestSuggestions(false);
+    }
+  };
+
+  const selectSource = (item) => {
+    setSource(item.label);
+    setShowSourceSuggestions(false);
+    Keyboard.dismiss();
+  };
+
+  const selectDest = (item) => {
+    setDestination(item.label);
+    setShowDestSuggestions(false);
+    Keyboard.dismiss();
   };
 
   const fetchRoutes = async () => {
@@ -321,18 +387,32 @@ export default function SafeRouteMapScreen({ navigation }) {
               <Ionicons name="close-circle" size={14} color="#aaa" />
             </TouchableOpacity>
           ) : (
-            <View style={styles.inputBox}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Type source address..."
-                placeholderTextColor="#aaa"
-                value={source}
-                onChangeText={(t) => { setSource(t); setRoutes([]); }}
-                returnKeyType="next"
-              />
-              <TouchableOpacity onPress={handleUseCurrentLocation}>
-                <Ionicons name="locate" size={18} color="#27AE60" />
-              </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <View style={styles.inputBox}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Type source address..."
+                  placeholderTextColor="#aaa"
+                  value={source}
+                  onChangeText={handleSourceChange}
+                  onFocus={() => { if (sourceSuggestions.length) setShowSourceSuggestions(true); setShowDestSuggestions(false); }}
+                  returnKeyType="next"
+                />
+                <TouchableOpacity onPress={handleUseCurrentLocation}>
+                  <Ionicons name="locate" size={18} color="#27AE60" />
+                </TouchableOpacity>
+              </View>
+              {/* Autocomplete for Source */}
+              {showSourceSuggestions && sourceSuggestions.length > 0 && (
+                <View style={styles.suggestionsWrapper}>
+                  {sourceSuggestions.map((item, i) => (
+                    <TouchableOpacity key={i} style={styles.suggestionItem} onPress={() => selectSource(item)}>
+                      <Ionicons name="location-outline" size={16} color="#aaa" />
+                      <Text style={styles.suggestionText} numberOfLines={1}>{item.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -347,20 +427,34 @@ export default function SafeRouteMapScreen({ navigation }) {
         {/* Destination Row */}
         <View style={styles.inputRow}>
           <View style={styles.dotRed} />
-          <View style={styles.inputBox}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Enter destination address..."
-              placeholderTextColor="#aaa"
-              value={destination}
-              onChangeText={(t) => { setDestination(t); setRoutes([]); }}
-              onSubmitEditing={fetchRoutes}
-              returnKeyType="search"
-            />
-            {destination.length > 0 && (
-              <TouchableOpacity onPress={() => { setDestination(""); setRoutes([]); }}>
-                <Ionicons name="close-circle" size={18} color="#aaa" />
-              </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <View style={styles.inputBox}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Enter destination address..."
+                placeholderTextColor="#aaa"
+                value={destination}
+                onChangeText={handleDestChange}
+                onFocus={() => { if (destSuggestions.length) setShowDestSuggestions(true); setShowSourceSuggestions(false); }}
+                onSubmitEditing={fetchRoutes}
+                returnKeyType="search"
+              />
+              {destination.length > 0 && (
+                <TouchableOpacity onPress={() => { setDestination(""); setRoutes([]); setShowDestSuggestions(false); }}>
+                  <Ionicons name="close-circle" size={18} color="#aaa" />
+                </TouchableOpacity>
+              )}
+            </View>
+            {/* Autocomplete for Destination */}
+            {showDestSuggestions && destSuggestions.length > 0 && (
+              <View style={styles.suggestionsWrapper}>
+                {destSuggestions.map((item, i) => (
+                  <TouchableOpacity key={i} style={styles.suggestionItem} onPress={() => selectDest(item)}>
+                    <Ionicons name="location-outline" size={16} color="#aaa" />
+                    <Text style={styles.suggestionText} numberOfLines={1}>{item.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
           </View>
         </View>
@@ -585,7 +679,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#444",
   },
   inputBox: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#2a2a40",
@@ -597,6 +690,26 @@ const styles = StyleSheet.create({
     flex: 1,
     color: "#fff",
     fontSize: 14,
+  },
+  suggestionsWrapper: {
+    backgroundColor: "#2a2a40",
+    borderRadius: 8,
+    marginTop: 6,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "#3a3a50",
+  },
+  suggestionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  suggestionText: {
+    color: "#e0e0e0",
+    fontSize: 13,
+    flex: 1,
   },
   currentLocBtn: {
     flex: 1,
