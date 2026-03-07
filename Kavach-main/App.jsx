@@ -19,7 +19,7 @@ import HomePage from "./screens/HomePage.jsx";
 import TabNavigator from "./navigations/TabNavigator.jsx";
 import MovementDetector from "./screens/MovementDetector.js"
 import VoiceAlert from "./screens/VoiceAlert.js";
-import SafeRouteMap from "./screens/SafeRouteMap.jsx";
+import SafeRouteMap from "./screens/SafeRouteMap";
 // import PoliceDashboard from "./screens/PolicDashboard.js";
 
 const Stack = createNativeStackNavigator();

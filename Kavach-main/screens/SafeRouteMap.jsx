@@ -17,10 +17,20 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 
 // -----------------------------------------------------------------------
-// Replace with your own Google Maps Directions API key when available.
-// Until then, mock routes are shown based on your real location.
+// OpenRouteService API Key (free, no credit card required)
 // -----------------------------------------------------------------------
-const GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY";
+const ORS_API_KEY = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjBiYjM1NDViZDViNzQ3YjhhNTdhMzNiNWNjMDQ4ZWI0IiwiaCI6Im11cm11cjY0In0=";
+
+// Geocode a place name using ORS Geocoding API → {latitude, longitude, label}
+async function geocodePlace(text) {
+  const url = `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(text)}&size=1`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!data.features || data.features.length === 0) return null;
+  const [lng, lat] = data.features[0].geometry.coordinates;
+  const label = data.features[0].properties.label || text;
+  return { latitude: lat, longitude: lng, label };
+}
 
 // Decode Google's encoded polyline format into lat/lng array
 function decodePolyline(encoded) {
@@ -145,87 +155,67 @@ export default function SafeRouteMapScreen({ navigation }) {
     setLoading(true);
 
     try {
-      // If a real API key is configured, use Google Directions API
-      if (GOOGLE_MAPS_API_KEY !== "YOUR_GOOGLE_MAPS_API_KEY") {
-        const origin = `${userLocation.latitude},${userLocation.longitude}`;
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${encodeURIComponent(destination)}&alternatives=true&key=${GOOGLE_MAPS_API_KEY}`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (data.status !== "OK" || data.routes.length === 0) {
-          Alert.alert("No Routes Found", "Could not find routes to that destination. Try a different place name.");
-          setLoading(false);
-          return;
-        }
-
-        // Parse real routes
-        const parsed = data.routes.map((r) => ({
-          points: decodePolyline(r.overview_polyline.points),
-          distance: r.legs[0].distance.value,  // meters
-          duration: r.legs[0].duration.value,  // seconds
-          summary: r.summary,
-          distanceText: r.legs[0].distance.text,
-          durationText: r.legs[0].duration.text,
-          destCoord: {
-            latitude: r.legs[0].end_location.lat,
-            longitude: r.legs[0].end_location.lng,
-          },
-        }));
-
-        // Sort by safety score descending (safest first)
-        const scored = parsed
-          .map((r) => ({ ...r, score: scoreRoute(r, parsed) }))
-          .sort((a, b) => b.score - a.score);
-
-        setRoutes(scored);
-        setSelectedRoute(0);
-        fitMapToRoutes(scored);
-      } else {
-        // ── Mock mode: generate 3 fake routes around the user's real location ──
-        // Simulate a destination ~3 km away
-        const destMock = {
-          latitude: userLocation.latitude + 0.027,
-          longitude: userLocation.longitude + 0.027,
-        };
-        const mockRoutes = [
-          {
-            points: mockPolyline(userLocation, destMock, 0.004),
-            distance: 3200,
-            duration: 720,
-            distanceText: "3.2 km",
-            durationText: "12 mins",
-            summary: "Via Main Road",
-            destCoord: destMock,
-          },
-          {
-            points: mockPolyline(userLocation, destMock, 0.009),
-            distance: 4100,
-            duration: 960,
-            distanceText: "4.1 km",
-            durationText: "16 mins",
-            summary: "Via Market Street",
-            destCoord: destMock,
-          },
-          {
-            points: mockPolyline(userLocation, destMock, 0.016),
-            distance: 5500,
-            duration: 1200,
-            distanceText: "5.5 km",
-            durationText: "20 mins",
-            summary: "Via Bypass Road",
-            destCoord: destMock,
-          },
-        ];
-
-        const scored = mockRoutes
-          .map((r) => ({ ...r, score: scoreRoute(r, mockRoutes) }))
-          .sort((a, b) => b.score - a.score);
-
-        setRoutes(scored);
-        setSelectedRoute(0);
-        fitMapToRoutes(scored);
+      // Step 1: Geocode destination text → coordinates
+      const destCoord = await geocodePlace(destination);
+      if (!destCoord) {
+        Alert.alert("Place Not Found", `Could not find "${destination}". Try a more specific name, e.g. "Hawa Mahal, Jaipur".`);
+        setLoading(false);
+        return;
       }
+
+      // Step 2: Fetch up to 3 alternative driving routes from ORS
+      // ORS uses [longitude, latitude] order (GeoJSON)
+      const body = {
+        coordinates: [
+          [userLocation.longitude, userLocation.latitude],
+          [destCoord.longitude, destCoord.latitude],
+        ],
+        alternative_routes: {
+          target_count: 3,
+          weight_factor: 1.6,
+          share_factor: 0.6,
+        },
+      };
+
+      const res = await fetch(
+        "https://api.openrouteservice.org/v2/directions/driving-car",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: ORS_API_KEY,
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!data.routes || data.routes.length === 0) {
+        Alert.alert("No Routes Found", "Could not find driving routes to that destination.");
+        setLoading(false);
+        return;
+      }
+
+      const parsed = data.routes.map((r, i) => ({
+        points: decodePolyline(r.geometry),
+        distance: r.summary.distance,
+        duration: r.summary.duration,
+        distanceText: (r.summary.distance / 1000).toFixed(1) + " km",
+        durationText: Math.round(r.summary.duration / 60) + " mins",
+        summary: `Route ${i + 1} · ${destCoord.label.split(",")[0]}`,
+        destCoord: { latitude: destCoord.latitude, longitude: destCoord.longitude },
+      }));
+
+      const scored = parsed
+        .map((r) => ({ ...r, score: scoreRoute(r, parsed) }))
+        .sort((a, b) => b.score - a.score);
+
+      setRoutes(scored);
+      setSelectedRoute(0);
+      fitMapToRoutes(scored);
     } catch (err) {
+      console.error("Route fetch error:", err);
       Alert.alert("Error", "Failed to fetch routes. Check your internet connection.");
     }
     setLoading(false);

@@ -4,7 +4,7 @@ const path = require("path");
 
 const config = getDefaultConfig(__dirname);
 
-// Redirect react-native-maps to an empty stub on web (it's native-only)
+// Redirect react-native-maps to an empty stub on web (it's a native-only package)
 const originalResolver = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (platform === "web" && moduleName === "react-native-maps") {
