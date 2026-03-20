@@ -409,13 +409,13 @@ const styles = StyleSheet.create({
   otpInputFilled: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    boxShadow: [{ color: "rgba(49, 130, 206, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(49, 130, 206, 0.1)",
     elevation: 4,
   },
   otpInputFocused: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    boxShadow: [{ color: "rgba(49, 130, 206, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(49, 130, 206, 0.1)",
     elevation: 4,
   },
   button: {
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: "100%",
     marginBottom: 24,
-    boxShadow: [{ color: "rgba(15, 23, 42, 0.2)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.2)",
     elevation: 6,
   },
   buttonDisabled: {

@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   inputContainerFocused: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    boxShadow: [{ color: "rgba(49, 130, 206, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(49, 130, 206, 0.1)",
     elevation: 4,
   },
   inputIcon: {
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A", // Deep Navy
     height: 56,
     borderRadius: 16,
-    boxShadow: [{ color: "rgba(15, 23, 42, 0.2)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.2)",
     elevation: 6,
     marginBottom: 24,
   },

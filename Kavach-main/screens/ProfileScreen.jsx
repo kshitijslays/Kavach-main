@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    boxShadow: [{ color: "rgba(15, 23, 42, 0.05)", offsetX: 0, offsetY: 4, blurRadius: 12 }],
+    boxShadow: "0px 4px 12px rgba(15, 23, 42, 0.05)",
     elevation: 3,
   },
   avatar: {

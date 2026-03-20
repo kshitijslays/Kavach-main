@@ -63,7 +63,7 @@ export default function TabNavigator() {
           borderRadius: 30,
           height: 64,
           borderTopWidth: 0,
-          boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 10, blurRadius: 15 }],
+          boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
           elevation: 10,
           paddingBottom: 0, // Override default padding
         },

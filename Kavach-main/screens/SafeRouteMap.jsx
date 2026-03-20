@@ -671,7 +671,7 @@ export default function SafeRouteMapScreen({ navigation }) {
                       { borderColor: routeColor(idx) },
                       idx === selectedRoute && {
                         backgroundColor: "rgba(255,255,255,1)",
-                        boxShadow: [{ color: `${routeColor(idx)}26`, offsetX: 0, offsetY: 0, blurRadius: 12 }],
+                        boxShadow: `0px 0px 12px ${routeColor(idx)}26`,
                         elevation: 10,
                         borderWidth: 2,
                       },
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 24,
     paddingBottom: 20,
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 16 }],
+    boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
     elevation: 8,
     zIndex: 10,
   },
@@ -759,15 +759,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 16,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    boxShadow: [{ color: "rgba(0,0,0,0.1)", offsetX: 0, offsetY: 2, blurRadius: 8 }],
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     elevation: 4,
   },
   headerTitleContainer: {
@@ -775,7 +767,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    boxShadow: [{ color: "rgba(0,0,0,0.1)", offsetX: 0, offsetY: 2, blurRadius: 8 }],
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     elevation: 4,
   },
   headerTitle: {
@@ -790,7 +782,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    boxShadow: [{ color: "rgba(0,0,0,0.1)", offsetX: 0, offsetY: 2, blurRadius: 8 }],
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
     elevation: 0, // removed elevation since it's inside a bordered card now
   },
 
@@ -808,7 +800,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 32,
     paddingTop: 12,
     paddingBottom: Platform.OS === "ios" ? 32 : 24,
-    boxShadow: [{ color: "rgba(0,0,0,0.1)", offsetX: 0, offsetY: -8, blurRadius: 16 }],
+    boxShadow: "0px -8px 16px rgba(0, 0, 0, 0.1)",
     elevation: 20,
   },
   sheetHandle: {
@@ -881,7 +873,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    boxShadow: [{ color: "rgba(0,0,0,0.05)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.05)",
     elevation: 4,
     position: 'absolute',
     top: 56,
@@ -926,7 +918,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 24,
-    boxShadow: [{ color: "rgba(15, 23, 42, 0.2)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.2)",
     elevation: 6,
   },
   goBtnText: {

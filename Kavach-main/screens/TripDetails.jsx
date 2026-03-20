@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#fff",
     borderRadius: 8,
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 1, blurRadius: 2 }],
+    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
     elevation: 2,
   },
   placeholder: {
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.05)", offsetX: 0, offsetY: 1, blurRadius: 3 }],
+    boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.05)",
     elevation: 2,
   },
   inputIcon: {
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.05)", offsetX: 0, offsetY: 2, blurRadius: 4 }],
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.05)",
     elevation: 3,
   },
   contactHeader: {
@@ -407,12 +407,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 10,
     marginBottom: 16,
-    boxShadow: [{ color: "rgba(15, 23, 42, 0.3)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
+    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.3)",
     elevation: 6,
   },
   generateButtonDisabled: {
     backgroundColor: "#ccc",
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 0, blurRadius: 2 }],
+    boxShadow: "0px 0px 2px rgba(0, 0, 0, 0.1)",
     elevation: 2,
   },
   buttonText: {

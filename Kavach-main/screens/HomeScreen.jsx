@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 8,
     overflow: "hidden",
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 2, blurRadius: 4 }],
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
     elevation: 3,
   },
   restaurantImage: {

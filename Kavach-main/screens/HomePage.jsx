@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.03)", offsetX: 0, offsetY: 2, blurRadius: 8 }],
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.03)",
     elevation: 2,
   },
   statusBannerLeft: {
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    boxShadow: [{ color: "rgba(239, 68, 68, 0.3)", offsetX: 0, offsetY: 8, blurRadius: 16 }],
+    boxShadow: "0px 8px 16px rgba(239, 68, 68, 0.3)",
     elevation: 8,
   },
   sosGradient: {
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.03)", offsetX: 0, offsetY: 2, blurRadius: 6 }],
+    boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.03)",
     elevation: 2,
   },
   widgetIconArea: {

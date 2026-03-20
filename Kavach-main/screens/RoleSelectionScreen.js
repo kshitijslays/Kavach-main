@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
-    boxShadow: [{ color: "rgba(59, 130, 246, 0.4)", offsetX: 0, offsetY: 8, blurRadius: 12 }],
+    boxShadow: "0px 8px 12px rgba(59, 130, 246, 0.4)",
     elevation: 8,
   },
   title: {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 36,
     paddingBottom: Platform.OS === 'ios' ? 40 : 30,
-    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: -10, blurRadius: 20 }],
+    boxShadow: "0px -10px 20px rgba(0, 0, 0, 0.1)",
     elevation: 20,
   },
   illustrationContainer: {
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    boxShadow: [{ color: "rgba(15, 23, 42, 0.25)", offsetX: 0, offsetY: 8, blurRadius: 12 }],
+    boxShadow: "0px 8px 12px rgba(15, 23, 42, 0.25)",
     elevation: 8,
   },
   getStartedText: {
