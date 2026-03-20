@@ -84,7 +84,7 @@ export const sendOTP = async (req, res) => {
 const ongoingVerifications = new Set();
 
 export const verifyOTP = async (req, res) => {
-  const { email, otp, name, phone } = req.body;
+  const { email, otp, name, phone, password } = req.body;
   const verificationKey = `${email}-${otp}`;
 
   console.log(`🔄 === OTP VERIFICATION DEBUG ===`);
@@ -132,10 +132,29 @@ export const verifyOTP = async (req, res) => {
           email,
           name: name || "User",
           phone: phone || "",
+          password: password || "",
           isVerified: true
         };
         
         console.log(`✅ OTP verified via memory storage`);
+        
+        // Since memory storage doesn't actually save to DB by default here, we should try to save it if we have all details
+        if (password) {
+           let dbUser = await User.findOne({ email });
+           if (!dbUser) {
+             dbUser = new User({ email, name: name || "User", phone: phone || "", password, isVerified: true });
+           } else {
+             dbUser.name = name || dbUser.name;
+             dbUser.phone = phone || dbUser.phone;
+             dbUser.password = password;
+             dbUser.isVerified = true;
+             dbUser.otp = null;
+             dbUser.otpExpiry = null;
+           }
+           await dbUser.save();
+           user = dbUser;
+        }
+
         // Clean up memory AFTER verification is complete
         delete global.tempOTPs[email];
       } else {
@@ -166,6 +185,9 @@ export const verifyOTP = async (req, res) => {
             // Update user
             user.name = name || user.name;
             user.phone = phone || user.phone;
+            if (password) {
+              user.password = password;
+            }
             user.isVerified = true;
             user.otp = null;
             user.otpExpiry = null;
@@ -195,6 +217,7 @@ export const verifyOTP = async (req, res) => {
         email: user.email,
         name: user.name,
         phone: user.phone,
+        emergencyContacts: user.emergencyContacts || [],
         isVerified: user.isVerified
       }, 
       token 
@@ -209,6 +232,73 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (user && user.password && (await user.matchPassword(password))) {
+      const token = generateToken(user._id);
+      
+      res.status(200).json({
+        message: "Login successful",
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          emergencyContacts: user.emergencyContacts || [],
+          isVerified: user.isVerified,
+        },
+        token,
+      });
+    } else {
+      res.status(401).json({ message: "Invalid email or password" });
+    }
+  } catch (error) {
+    console.error(`❌ Login error:`, error.message);
+    res.status(500).json({ message: "Login failed", error: error.message });
+  }
+};
+
+
+export const updateProfile = async (req, res) => {
+  const { name, phone, emergencyContacts } = req.body;
+
+  try {
+    // req.user is set by the protect middleware
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (emergencyContacts && Array.isArray(emergencyContacts)) {
+      user.emergencyContacts = emergencyContacts;
+    }
+
+    await user.save();
+    console.log(`✅ Profile updated for: ${user.email}`);
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        emergencyContacts: user.emergencyContacts,
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error(`❌ Update profile error:`, error.message);
+    res.status(500).json({ message: "Profile update failed", error: error.message });
+  }
+};
 
 export const googleLogin = async (req, res) => {
   const { idToken } = req.body;
@@ -241,3 +331,28 @@ export const googleLogin = async (req, res) => {
     res.status(400).json({ message: "Google login failed", error: error.message });
   }
 };
+
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile retrieved successfully",
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        emergencyContacts: user.emergencyContacts || [],
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error(`❌ Get profile error:`, error.message);
+    res.status(500).json({ message: "Failed to retrieve profile", error: error.message });
+  }
+};

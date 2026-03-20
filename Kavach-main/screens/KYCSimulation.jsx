@@ -112,13 +112,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#fff",
     borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 1, blurRadius: 2 }],
     elevation: 2,
   },
   placeholder: {
@@ -147,13 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 25,
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(212, 16, 93, 0.2)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 5,
   },
   scanTitle: {
@@ -191,13 +179,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 25,
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    boxShadow: [{ color: "rgba(212, 16, 93, 0.2)", offsetX: 0, offsetY: 6, blurRadius: 12 }],
     elevation: 8,
   },
   successTitle: {
@@ -224,13 +206,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     borderRadius: 12,
     width: "100%",
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(212, 16, 93, 0.3)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 6,
   },
   primaryBtnText: {

@@ -11,16 +11,17 @@ import {
   StatusBar
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useUser } from "../context/UserContext";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-
 export default function HomeScreen({ navigation, route }) {
+  const { user } = useUser();
   const [safetyStatus, setSafetyStatus] = useState("safe"); // safe, danger, offline
   const [location, setLocation] = useState("Fetching location...");
   const [isTracking, setIsTracking] = useState(true);
 
-  // Get user data from navigation params
-  const userData = route.params?.userData || {};
+  // Get user data from context or navigation params
+  const userData = user || route.params?.userData || {};
   const userName = userData?.name?.split(' ')[0] || "Traveler";
   const emergencyContacts = userData?.emergencyContacts || [];
 
@@ -339,10 +340,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.03)", offsetX: 0, offsetY: 2, blurRadius: 8 }],
     elevation: 2,
   },
   statusBannerLeft: {
@@ -381,10 +379,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    shadowColor: "#EF4444",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    boxShadow: [{ color: "rgba(239, 68, 68, 0.3)", offsetX: 0, offsetY: 8, blurRadius: 16 }],
     elevation: 8,
   },
   sosGradient: {
@@ -435,10 +430,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.03)", offsetX: 0, offsetY: 2, blurRadius: 6 }],
     elevation: 2,
   },
   widgetIconArea: {

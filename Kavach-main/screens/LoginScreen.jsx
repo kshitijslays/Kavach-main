@@ -13,20 +13,25 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { authAPI } from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUser } from '../context/UserContext';
 
 export default function LoginScreen({ navigation }) {
+  const { login } = useUser();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const sendOTP = async () => {
-    if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email address');
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter your email and password');
       return;
     }
 
@@ -38,30 +43,33 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
 
     try {
-      console.log('📧 Sending OTP to:', email.toLowerCase().trim());
-      const data = await authAPI.sendOTP(email.toLowerCase().trim());
-      console.log('✅ Send OTP response:', data);
+      console.log('📧 Logging in:', email.toLowerCase().trim());
+      const data = await authAPI.login(email.toLowerCase().trim(), password);
+      console.log('✅ Login response:', data);
       
-      Alert.alert(
-        'Success', 
-        data?.warning 
-          ? 'OTP generated! Check your email (delivery may be delayed).'
-          : 'OTP sent to your email!',
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              navigation.navigate('OTP', { 
-                email: email.toLowerCase().trim(),
-                fromScreen: 'Login'
-              });
-            }
-          }
-        ]
-      );
+      if (data.token) {
+        await AsyncStorage.setItem('userToken', data.token);
+      }
+      
+      if (data.user) {
+        login(data.user);
+      }
+      
+      // Determine next screen based on profile completion
+      const hasFullProfile = data.user?.name && data.user?.phone && data.user?.emergencyContacts?.length > 0;
+      
+      if (hasFullProfile) {
+        navigation.replace('MainTabs', { screen: 'Home' });
+      } else {
+        navigation.navigate('TripDetails', {
+          userEmail: email.toLowerCase().trim(),
+          token: data.token
+        });
+      }
+      
     } catch (error) {
-      console.error('❌ Send OTP Error:', error);
-      Alert.alert('Error', error.message || 'Failed to send OTP. Please check your email and try again.');
+      console.error('❌ Login Error:', error);
+      Alert.alert('Error', error.message || 'Invalid email or password.');
     } finally {
       setLoading(false);
     }
@@ -115,17 +123,43 @@ export default function LoginScreen({ navigation }) {
               />
             </View>
 
+            <Text style={styles.label}>Password</Text>
+            <View style={[
+              styles.inputContainer,
+              isPasswordFocused && styles.inputContainerFocused
+            ]}>
+              <Ionicons 
+                name="lock-closed-outline" 
+                size={20} 
+                color={isPasswordFocused ? "#3182CE" : "#94A3B8"} 
+                style={styles.inputIcon} 
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#94A3B8"
+                value={password}
+                onChangeText={setPassword}
+                onFocus={() => setIsPasswordFocused(true)}
+                onBlur={() => setIsPasswordFocused(false)}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
+
             <TouchableOpacity 
-              style={[styles.button, (!email.trim() || loading) && styles.buttonDisabled]}
-              onPress={sendOTP}
-              disabled={!email.trim() || loading}
+              style={[styles.button, (!email.trim() || !password.trim() || loading) && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={!email.trim() || !password.trim() || loading}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <>
-                  <Text style={styles.buttonText}>Send Verification Code</Text>
-                  <Ionicons name="arrow-forward" size={20} color="#fff" />
+                  <Text style={styles.buttonText}>Sign In</Text>
+                  <Ionicons name="log-in-outline" size={20} color="#fff" />
                 </>
               )}
             </TouchableOpacity>
@@ -230,10 +264,7 @@ const styles = StyleSheet.create({
   inputContainerFocused: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    shadowColor: "#3182CE",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(49, 130, 206, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 4,
   },
   inputIcon: {
@@ -253,10 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A", // Deep Navy
     height: 56,
     borderRadius: 16,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(15, 23, 42, 0.2)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 6,
     marginBottom: 24,
   },

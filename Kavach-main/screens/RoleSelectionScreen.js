@@ -1,9 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   Image,
   Platform,
@@ -12,14 +11,14 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
-const { width, height } = Dimensions.get("window");
-
 export default function RoleSelectionScreen({ navigation }) {
-  const fadeAnim = new Animated.Value(0);
-  const slideAnim = new Animated.Value(30);
+  const { width, height } = useWindowDimensions();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -57,9 +56,14 @@ export default function RoleSelectionScreen({ navigation }) {
           },
         ]}
       >
-        <View style={styles.topIllustration}>
+        <View style={[styles.topIllustration, { paddingTop: height * 0.05 }]}>
           {/* Abstract background styling */}
-          <View style={styles.glowCircle} />
+          <View style={[styles.glowCircle, { 
+            width: width * 1.5, 
+            height: width * 1.5, 
+            borderRadius: width * 0.75, 
+            top: -width * 0.5 
+          }]} />
           
           <View style={styles.header}>
             <View style={styles.logoContainer}>
@@ -74,28 +78,13 @@ export default function RoleSelectionScreen({ navigation }) {
 
         {/* Bottom Sheet Section */}
         <View style={styles.bottomSheet}>
-          <Text style={styles.sheetTitle}>Core Features</Text>
-          
-          <View style={styles.featuresList}>
-            <View style={styles.featureRow}>
-              <View style={[styles.iconBox, { backgroundColor: '#EFF6FF' }]}>
-                <Ionicons name="mic" size={20} color="#3B82F6" />
-              </View>
-              <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>AI Listening</Text>
-                <Text style={styles.featureDesc}>Detects distress signals</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureRow}>
-              <View style={[styles.iconBox, { backgroundColor: '#FEF2F2' }]}>
-                <Ionicons name="warning" size={20} color="#EF4444" />
-              </View>
-              <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Automated SOS</Text>
-                <Text style={styles.featureDesc}>Hands-free emergency response</Text>
-              </View>
-            </View>
+          {/* Illustration Section */}
+          <View style={[styles.illustrationContainer, { height: height * 0.3 }]}>
+            <Image
+              source={{ uri: "https://1kga789wdc.ufs.sh/f/lJZn16SaUVX5LyYiqtLV4dQjwtUe75ApxbP68hlkFNKnGZIq" }}
+              style={styles.illustration}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Actions */}
@@ -142,15 +131,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 30,
-    paddingTop: height * 0.05,
   },
   glowCircle: {
     position: 'absolute',
-    width: width * 1.5,
-    height: width * 1.5,
-    borderRadius: width * 0.75,
     backgroundColor: '#1E293B',
-    top: -width * 0.5,
     opacity: 0.5,
   },
   header: {
@@ -165,10 +149,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    boxShadow: [{ color: "rgba(59, 130, 246, 0.4)", offsetX: 0, offsetY: 8, blurRadius: 12 }],
     elevation: 8,
   },
   title: {
@@ -194,51 +175,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 36,
     paddingBottom: Platform.OS === 'ios' ? 40 : 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: -10, blurRadius: 20 }],
     elevation: 20,
   },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 20,
-  },
-  featuresList: {
-    marginBottom: 32,
-    gap: 16,
-  },
-  featureRow: {
-    flexDirection: "row",
+  illustrationContainer: {
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
     justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
+    marginVertical: 20,
   },
-  featureText: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#0F172A",
-    marginBottom: 4,
-  },
-  featureDesc: {
-    fontSize: 13,
-    color: "#64748B",
+  illustration: {
+    width: "100%",
+    height: "100%",
   },
   bottomSection: {
     gap: 24,
@@ -250,10 +197,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    boxShadow: [{ color: "rgba(15, 23, 42, 0.25)", offsetX: 0, offsetY: 8, blurRadius: 12 }],
     elevation: 8,
   },
   getStartedText: {

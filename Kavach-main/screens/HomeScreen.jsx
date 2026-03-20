@@ -1,7 +1,7 @@
 import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import React from "react";
-import {
-  Dimensions,
+import { 
+  useWindowDimensions,
   Image,
   ScrollView,
   StatusBar,
@@ -11,9 +11,8 @@ import {
   View,
 } from "react-native";
 
-const { width } = Dimensions.get("window");
-
 export default function HomeScreen({ route }) {
+  const { width } = useWindowDimensions();
   const setupCompleted = route?.params?.setupCompleted;
   const profile = route?.params?.profile;
   
@@ -99,7 +98,7 @@ export default function HomeScreen({ route }) {
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.restaurantsList}>
-            <TouchableOpacity style={styles.restaurantCard}>
+            <TouchableOpacity style={[styles.restaurantCard, { width: width * 0.7 }]}>
               <Image 
                 source={{ uri: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800" }} 
                 style={styles.restaurantImage} 
@@ -296,15 +295,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   restaurantCard: {
-    width: width * 0.7,
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     marginHorizontal: 8,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 2, blurRadius: 4 }],
     elevation: 3,
   },
   restaurantImage: {

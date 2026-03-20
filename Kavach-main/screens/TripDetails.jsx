@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { authAPI } from "../services/api";
+import { useUser } from "../context/UserContext";
 
 export default function TripDetailsScreen({ navigation, route }) {
   const [name, setName] = useState("");
@@ -21,6 +23,9 @@ export default function TripDetailsScreen({ navigation, route }) {
     { name: "", number: "" },
     { name: "", number: "" }
   ]);
+  
+  const { updateProfile } = useUser();
+  const token = route.params?.token;
 
   const validateForm = () => {
     if (!name.trim()) {
@@ -53,15 +58,30 @@ export default function TripDetailsScreen({ navigation, route }) {
         contact => contact.name.trim() && contact.number.trim()
       );
 
-      // Persist emergency contacts for background emergency detector
-      try {
-        await AsyncStorage.setItem('emergencyContacts', JSON.stringify(filteredContacts));
-        console.log('✅ Emergency contacts saved to AsyncStorage');
-      } catch (error) {
-        console.error('❌ Error saving emergency contacts:', error);
+      // Removed local saving to AsyncStorage as per requirement to use DB only
+
+      // Save full profile to MongoDB database
+      const authToken = token || (await AsyncStorage.getItem('userToken'));
+      if (authToken) {
+        try {
+          const result = await authAPI.updateProfile(authToken, {
+            name,
+            phone,
+            emergencyContacts: filteredContacts,
+          });
+          
+          if (result.user) {
+            updateProfile(result.user);
+          }
+          console.log('✅ Profile saved to database and context:', result?.user?.email);
+        } catch (error) {
+          console.error('❌ Error saving profile to database:', error.message);
+          // Non-fatal: continue to next screen even if DB save fails
+        }
+      } else {
+        console.warn('⚠️ No auth token found, skipping DB save');
       }
 
-      // Navigate directly to main app dashboard
       navigation.navigate("MainTabs", {
         screen: "Home",
         params: {
@@ -263,13 +283,7 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#fff",
     borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 1, blurRadius: 2 }],
     elevation: 2,
   },
   placeholder: {
@@ -322,13 +336,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.05)", offsetX: 0, offsetY: 1, blurRadius: 3 }],
     elevation: 2,
   },
   inputIcon: {
@@ -348,13 +356,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.05)", offsetX: 0, offsetY: 2, blurRadius: 4 }],
     elevation: 3,
   },
   contactHeader: {
@@ -405,20 +407,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 10,
     marginBottom: 16,
-    shadowColor: "#0F172A",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(15, 23, 42, 0.3)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 6,
   },
   generateButtonDisabled: {
     backgroundColor: "#ccc",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 0, blurRadius: 2 }],
     elevation: 2,
   },
   buttonText: {

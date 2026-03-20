@@ -14,8 +14,8 @@ export default function VerificationSuccess({ navigation, route }) {
   const email = route.params?.email || "your-email@domain.com";
   const nextScreen = route.params?.nextScreen || "TravelProfile";
   
-  const scaleAnim = new Animated.Value(0.8);
-  const fadeAnim = new Animated.Value(0);
+  const scaleAnim = React.useRef(new Animated.Value(0.8)).current;
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     // Animate the icon and content on mount
@@ -138,13 +138,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 35,
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
+    boxShadow: [{ color: "rgba(212, 16, 93, 0.2)", offsetX: 0, offsetY: 8, blurRadius: 16 }],
     elevation: 10,
     position: "relative",
   },
@@ -194,13 +188,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     marginBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.05)", offsetX: 0, offsetY: 2, blurRadius: 8 }],
     elevation: 3,
     borderWidth: 1,
     borderColor: "#f0f0f0",
@@ -239,13 +227,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 12,
     width: "100%",
-    shadowColor: "#D4105D",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(212, 16, 93, 0.3)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 6,
   },
   buttonText: {

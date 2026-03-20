@@ -12,23 +12,27 @@ import {
   Animated,
   Easing,
   ActivityIndicator,
-  Dimensions,
+  useWindowDimensions,
   ScrollView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { authAPI } from '../services/api';
-
-const { width } = Dimensions.get('window');
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUser } from '../context/UserContext';
 
 export default function OTPScreen({ navigation, route }) {
+  const { width } = useWindowDimensions();
+  const { login } = useUser();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(30);
   const [isResendDisabled, setIsResendDisabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const inputRefs = useRef([]);
-  const shakeAnimation = new Animated.Value(0);
+  const shakeAnimation = useRef(new Animated.Value(0)).current;
   const email = route.params?.email || "";
+  const name = route.params?.name || "";
+  const password = route.params?.password || "";
   const fromScreen = route.params?.fromScreen || "Login";
 
   useEffect(() => {
@@ -92,20 +96,30 @@ export default function OTPScreen({ navigation, route }) {
       
       try {
         console.log('🔐 Verifying OTP:', enteredOtp, 'for email:', email);
-        const data = await authAPI.verifyOTP(email, enteredOtp);
+        const data = await authAPI.verifyOTP(email, enteredOtp, name, null, password);
         console.log('✅ OTP verification response:', data);
         
         // Check if it's a duplicate request message
         if (data.message?.includes('already in progress')) {
           console.log('⚠️ Duplicate request, ignoring...');
-          return; // Don't show success for duplicate requests
+          return;
         }
         
-        // Navigate directly without alert for better UX
+        // Save token to AsyncStorage for later use
+        if (data.token) {
+          await AsyncStorage.setItem('userToken', data.token);
+          console.log('✅ Token saved to AsyncStorage');
+        }
+        
+        if (data.user) {
+          login(data.user);
+        }
+
         console.log('🎉 Navigating to next screen...');
         navigation.navigate('TripDetails', {
           userEmail: email,
-          fromVerification: true
+          fromVerification: true,
+          token: data.token,
         });
       } catch (error) {
         console.error('❌ Verify OTP Error:', error);
@@ -234,7 +248,7 @@ export default function OTPScreen({ navigation, route }) {
             {email}
           </Text>
 
-          <Animated.View style={[styles.otpContainer, { transform: [{ translateX }] }]}>
+          <Animated.View style={[styles.otpContainer, { transform: [{ translateX : shakeAnimation }], width: width * 0.85 }]}>
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
@@ -378,7 +392,6 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: width * 0.85,
     marginBottom: 32,
   },
   otpInput: {
@@ -396,19 +409,13 @@ const styles = StyleSheet.create({
   otpInputFilled: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    shadowColor: "#3182CE",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(49, 130, 206, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 4,
   },
   otpInputFocused: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    shadowColor: "#3182CE",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(49, 130, 206, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 4,
   },
   button: {
@@ -420,10 +427,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: "100%",
     marginBottom: 24,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(15, 23, 42, 0.2)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 6,
   },
   buttonDisabled: {

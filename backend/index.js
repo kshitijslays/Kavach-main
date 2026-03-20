@@ -13,7 +13,7 @@ const app = express();
 
 // CORS configuration for development
 app.use(cors({ 
-  origin: ["http://localhost:8081", "http://localhost:19006", "http://localhost:19000", "*"], 
+  origin: true, // This will reflect the request origin
   credentials: true 
 }));
 

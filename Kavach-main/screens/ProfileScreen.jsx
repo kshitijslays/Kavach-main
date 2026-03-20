@@ -2,31 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUser } from '../context/UserContext';
 
 export default function ProfileScreen({ navigation, route }) {
+  const { user, logout: logoutContext, loading } = useUser();
   const [userData, setUserData] = useState({
-    name: route.params?.userData?.name || "Member",
-    phone: route.params?.userData?.phone || "Not linked",
-    emergencyContacts: route.params?.userData?.emergencyContacts || []
+    name: user?.name || "Member",
+    phone: user?.phone || "Not linked",
+    emergencyContacts: user?.emergencyContacts || []
   });
 
   useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const contactsJson = await AsyncStorage.getItem('emergencyContacts');
-      if (contactsJson) {
-        const contacts = JSON.parse(contactsJson);
-        setUserData(prev => ({ ...prev, emergencyContacts: contacts }));
-      }
-    } catch (error) {
-      console.error('❌ Error loading profile data:', error);
+    if (user) {
+      setUserData({
+        name: user.name || "Member",
+        phone: user.phone || "Not linked",
+        emergencyContacts: user.emergencyContacts || []
+      });
     }
-  };
+  }, [user]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       "Sign Out",
       "Are you sure you want to sign out from Shield?",
@@ -35,7 +31,10 @@ export default function ProfileScreen({ navigation, route }) {
         { 
           text: "Sign Out", 
           style: "destructive", 
-          onPress: () => navigation.replace("RoleSelection") 
+          onPress: async () => {
+            await logoutContext();
+            navigation.replace("RoleSelection");
+          }
         }
       ]
     );
@@ -180,10 +179,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
+    boxShadow: [{ color: "rgba(15, 23, 42, 0.05)", offsetX: 0, offsetY: 4, blurRadius: 12 }],
     elevation: 3,
   },
   avatar: {

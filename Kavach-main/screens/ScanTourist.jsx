@@ -111,9 +111,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 2,
     backgroundColor: "#007BFF",
-    shadowColor: "#007BFF",
-    shadowOpacity: 1,
-    shadowRadius: 10,
+    boxShadow: [{ color: "rgba(0, 123, 255, 1)", offsetX: 0, offsetY: 0, blurRadius: 10 }],
   },
   captureButton: {
     backgroundColor: "#007BFF",

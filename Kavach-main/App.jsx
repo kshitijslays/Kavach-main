@@ -11,6 +11,7 @@ import RoleSelectionScreen from "./screens/RoleSelectionScreen.js";
 import TouristSignUpScreen from "./screens/TouristSignUpScreen.jsx";
 import AuthorityLoginScreen from "./screens/AuthorityLoginScreen.jsx";
 import OTPScreen from "./screens/otp.jsx";
+import LoginScreen from "./screens/LoginScreen.jsx";
 import VerificationSuccess from "./screens/VerificationSuccess";
 import TravelProfileScreen from "./screens/TravelProfileScreen";
 import KycSimulation from "./screens/KYCSimulation.jsx";
@@ -21,6 +22,7 @@ import TabNavigator from "./navigations/TabNavigator.jsx";
 import MovementDetector from "./screens/MovementDetector.js"
 import VoiceAlert from "./screens/VoiceAlert.js";
 import SafeRouteMap from "./screens/SafeRouteMap";
+import { UserProvider } from "./context/UserContext";
 // import PoliceDashboard from "./screens/PolicDashboard.js";
 
 const Stack = createNativeStackNavigator();
@@ -34,8 +36,9 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <MovementDetector />
+    <UserProvider>
+      <NavigationContainer>
+        <MovementDetector />
       <Stack.Navigator
         initialRouteName="RoleSelection"
         screenOptions={{
@@ -48,6 +51,7 @@ export default function App() {
         <Stack.Screen name="TouristSignUp" component={TouristSignUpScreen} />
         <Stack.Screen name="AuthorityLogin" component={AuthorityLoginScreen} />
         <Stack.Screen name="OTP" component={OTPScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="TravelProfile" component={TravelProfileScreen} />
         <Stack.Screen name="TripDetails" component={TripDetails} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
@@ -55,5 +59,6 @@ export default function App() {
         <Stack.Screen name="SafeRouteMap" component={SafeRouteMap} />
       </Stack.Navigator>
     </NavigationContainer>
+  </UserProvider>
   );
 }

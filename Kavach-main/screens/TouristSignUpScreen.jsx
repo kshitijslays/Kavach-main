@@ -17,7 +17,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { authAPI } from "../services/api";
 
 export default function TouristSignUpScreen({ navigation }) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isValidEmail, setIsValidEmail] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -40,10 +42,18 @@ export default function TouristSignUpScreen({ navigation }) {
       setIsValidEmail(false);
       return;
     }
+    if (!name || !password) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
     setLoading(true);
     try {
       await authAPI.sendOTP(email.toLowerCase().trim());
-      navigation.navigate("OTP", { email: email.toLowerCase().trim() });
+      navigation.navigate("OTP", { 
+        email: email.toLowerCase().trim(),
+        name: name,
+        password: password
+      });
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to send OTP. Please try again.');
     } finally {
@@ -82,8 +92,28 @@ export default function TouristSignUpScreen({ navigation }) {
               </View>
               <Text style={styles.welcomeTitle}>Create Your Account</Text>
               <Text style={styles.welcomeSubtitle}>
-                Enter your email to get started with your secure profile
+                Enter your details to get started with your secure profile
               </Text>
+            </View>
+
+            <View style={styles.inputField}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="person-outline"
+                  size={20}
+                  color="#94A3B8"
+                  style={styles.emailIcon}
+                />
+                <TextInput
+                  style={styles.emailInput}
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#94A3B8"
+                  value={name}
+                  onChangeText={setName}
+                  autoCorrect={false}
+                />
+              </View>
             </View>
 
             <View style={styles.inputField}>
@@ -112,6 +142,27 @@ export default function TouristSignUpScreen({ navigation }) {
               {!isValidEmail && (
                 <Text style={styles.errorText}>Please enter a valid email address</Text>
               )}
+            </View>
+
+            <View style={styles.inputField}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color="#94A3B8"
+                  style={styles.emailIcon}
+                />
+                <TextInput
+                  style={styles.emailInput}
+                  placeholder="Create a secure password"
+                  placeholderTextColor="#94A3B8"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
             </View>
 
             <TouchableOpacity
@@ -237,10 +288,7 @@ const styles = StyleSheet.create({
   inputContainerFocused: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    shadowColor: "#3182CE",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(49, 130, 206, 0.1)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 4,
   },
   inputContainerError: {
@@ -269,10 +317,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A",
     height: 56,
     borderRadius: 16,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    boxShadow: [{ color: "rgba(15, 23, 42, 0.2)", offsetX: 0, offsetY: 4, blurRadius: 8 }],
     elevation: 6,
     marginBottom: 24,
   },

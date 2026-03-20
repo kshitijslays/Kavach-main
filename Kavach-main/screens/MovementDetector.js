@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Platform, Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from "../context/UserContext";
 import * as Speech from "expo-speech";
 import * as SMS from "expo-sms";
 import { emergencyAPI } from "../services/api";
@@ -15,6 +16,7 @@ export default function MovementDetector() {
   const [lastAlert, setLastAlert] = useState(0);
   const [isAlerting, setIsAlerting] = useState(false);
   const [countdown, setCountdown] = useState(15);
+  const { user } = useUser();
 
   // Handle countdown timer
   useEffect(() => {
@@ -49,10 +51,9 @@ export default function MovementDetector() {
       const { latitude, longitude } = location.coords;
       console.log(`📍 Current Location: ${latitude}, ${longitude}`);
       
-      // 2. Fetch all emergency contacts from storage
-      const contactsJson = await AsyncStorage.getItem('emergencyContacts');
-      const contacts = contactsJson ? JSON.parse(contactsJson) : [];
-      console.log(`📱 Found ${contacts.length} emergency contacts in storage`);
+      // 2. Fetch all emergency contacts from UserContext
+      const contacts = user?.emergencyContacts || [];
+      console.log(`📱 Found ${contacts.length} emergency contacts from context`);
       if (contacts.length > 0) {
         console.log("👥 Contacts:", contacts.map(c => `${c.name}: ${c.number}`).join(", "));
       }

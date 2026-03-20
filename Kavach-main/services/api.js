@@ -37,9 +37,23 @@ api.interceptors.response.use(
 export const authAPI = {
   sendOTP: (email) => api.post('/auth/send-otp', { email }),
   
-  verifyOTP: (email, otp, name = null, phone = null) => 
-    api.post('/auth/verify-otp', { email, otp, name, phone }),
+  verifyOTP: (email, otp, name = null, phone = null, password = null) => 
+    api.post('/auth/verify-otp', { email, otp, name, phone, password }),
   
+  login: (email, password) => 
+    api.post('/auth/login', { email, password }),
+  
+  updateProfile: (token, { name, phone, emergencyContacts }) =>
+    api.put('/auth/update-profile', { name, phone, emergencyContacts }, {
+      headers: { Authorization: `Bearer ${token}` }
+    }),
+
+  getProfile: (token) =>
+    api.get('/auth/profile', {
+      headers: { Authorization: `Bearer ${token}` }
+    }),
+
+
   googleLogin: (idToken) => 
     api.post('/auth/google-login', { idToken }),
 };

@@ -1,20 +1,19 @@
-import React, { useState } from "react";
-import {
+import React, { useState, useRef } from "react";
+import { 
+  useWindowDimensions,
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
   Animated,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-const { width } = Dimensions.get("window");
-
 export default function TravelProfileScreen({ navigation }) {
+  const { width } = useWindowDimensions();
   const [selectedId, setSelectedId] = useState(null);
-  const scaleAnim = new Animated.Value(1);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const profiles = [
     {
@@ -90,7 +89,7 @@ export default function TravelProfileScreen({ navigation }) {
               key={profile.id}
               style={[
                 styles.cardContainer,
-                { transform: [{ scale: scaleAnim }] },
+                { transform: [{ scale: scaleAnim }], width: width - 40 },
               ]}
             >
               <TouchableOpacity
@@ -174,7 +173,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   cardContainer: {
-    width: width - 40,
+    // Width calculated dynamically in render via inline styles
   },
   card: {
     flexDirection: "row",
@@ -184,13 +183,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: [{ color: "rgba(0, 0, 0, 0.1)", offsetX: 0, offsetY: 2, blurRadius: 4 }],
     elevation: 3,
   },
   selectedCard: {
