@@ -6,7 +6,6 @@ import {
   Easing,
   Image,
   Platform,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -14,13 +13,16 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RoleSelectionScreen({ navigation }) {
+  console.log("🎨 RoleSelectionScreen: Component is initializing!");
   const { width, height } = useWindowDimensions();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
+    console.log("🎨 RoleSelectionScreen: Animation starting!");
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -47,15 +49,7 @@ export default function RoleSelectionScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#262626" />
 
-      <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
+      <View style={styles.content}>
         <View style={[styles.topIllustration, { paddingTop: height * 0.05 }]}>
           {/* Abstract background styling */}
           <View style={[styles.glowCircle, { 
@@ -111,7 +105,7 @@ export default function RoleSelectionScreen({ navigation }) {
             </View>
           </View>
         </View>
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -149,7 +143,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 24,
-    boxShadow: "0px 8px 12px rgba(59, 130, 246, 0.4)",
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
     elevation: 8,
   },
   title: {
@@ -175,7 +172,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 36,
     paddingBottom: Platform.OS === 'ios' ? 40 : 30,
-    boxShadow: "0px -10px 20px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
     elevation: 20,
   },
   illustrationContainer: {
@@ -197,7 +197,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    boxShadow: "0px 8px 12px rgba(15, 23, 42, 0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
     elevation: 8,
   },
   getStartedText: {

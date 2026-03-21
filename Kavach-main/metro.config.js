@@ -4,6 +4,8 @@ const path = require("path");
 
 const config = getDefaultConfig(__dirname);
 
+config.resolver.sourceExts.push("jsx", "js", "ts", "tsx", "json");
+
 // Redirect react-native-maps to an empty stub on web (it's a native-only package)
 const originalResolver = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {

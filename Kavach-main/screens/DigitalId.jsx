@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -200,7 +201,10 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 24,
     backgroundColor: "#fff",
-    boxShadow: "0px 16px 32px rgba(15, 23, 42, 0.1)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.1,
+    shadowRadius: 32,
     elevation: 12,
     marginBottom: 32,
     overflow: 'hidden',
@@ -313,7 +317,11 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#fff",
     borderRadius: 20,
-    boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.08)",
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 4,
     marginBottom: 16,
     borderWidth: 1,
@@ -351,7 +359,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A",
     paddingVertical: 16,
     borderRadius: 16,
-    boxShadow: "0px 6px 10px rgba(15, 23, 42, 0.2)",
+    borderRadius: 16,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
     elevation: 6,
   },
   primaryButtonText: {

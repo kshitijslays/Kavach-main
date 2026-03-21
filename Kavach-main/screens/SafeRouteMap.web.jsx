@@ -2,7 +2,8 @@
 // Metro automatically uses this file instead of SafeRouteMap.jsx on web,
 // preventing the native-only react-native-maps from being bundled for web.
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function SafeRouteMapScreen({ navigation }) {

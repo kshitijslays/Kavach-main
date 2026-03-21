@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import {
+  KeyboardAvoidingView,
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TextInput,
   TouchableOpacity,
   ScrollView,
   Alert,
-  Platform,
-  KeyboardAvoidingView
+  useWindowDimensions,
+  Platform
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authAPI } from "../services/api";
@@ -283,7 +284,10 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#fff",
     borderRadius: 8,
-    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
   placeholder: {
@@ -336,7 +340,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
     elevation: 2,
   },
   inputIcon: {
@@ -356,7 +363,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 3,
   },
   contactHeader: {
@@ -407,7 +417,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 10,
     marginBottom: 16,
-    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.3)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 6,
   },
   generateButtonDisabled: {

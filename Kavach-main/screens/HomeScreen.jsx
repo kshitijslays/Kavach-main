@@ -1,15 +1,16 @@
-import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import { 
-  useWindowDimensions,
-  Image,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
   TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  StatusBar,
+  useWindowDimensions
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
 export default function HomeScreen({ route }) {
   const { width } = useWindowDimensions();
@@ -17,7 +18,7 @@ export default function HomeScreen({ route }) {
   const profile = route?.params?.profile;
   
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       {/* Welcome Banner for New Users */}
@@ -175,7 +176,7 @@ export default function HomeScreen({ route }) {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingTop: 50,
+    paddingTop: 10,
     paddingBottom: 12,
     backgroundColor: "white",
     borderBottomWidth: 1,
@@ -299,7 +300,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 8,
     overflow: "hidden",
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
   restaurantImage: {

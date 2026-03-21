@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Platform,
   TextInput,
@@ -13,6 +12,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { authAPI } from "../services/api";
 
@@ -288,7 +288,10 @@ const styles = StyleSheet.create({
   inputContainerFocused: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    boxShadow: "0px 4px 8px rgba(49, 130, 206, 0.1)",
+    shadowColor: "#3182CE",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 4,
   },
   inputContainerError: {
@@ -317,7 +320,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A",
     height: 56,
     borderRadius: 16,
-    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.2)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 6,
     marginBottom: 24,
   },

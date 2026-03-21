@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  SafeAreaView, 
-  KeyboardAvoidingView, 
-  Platform,
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  KeyboardAvoidingView,
   Alert,
+  Platform,
   Animated,
   Easing,
-  ActivityIndicator,
-  useWindowDimensions,
-  ScrollView
+  useWindowDimensions
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { authAPI } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -56,7 +56,7 @@ export default function OTPScreen({ navigation, route }) {
     
     // Auto focus to next input
     if (value && index < 5) {
-      inputRefs.current[index + 1].focus();
+      inputRefs.current[index + 1]?.focus();
     }
     
     // Auto submit if last digit is entered (with delay to prevent double calls)
@@ -76,7 +76,7 @@ export default function OTPScreen({ navigation, route }) {
   const handleKeyPress = (e, index) => {
     // Handle backspace to move to previous input
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
@@ -427,7 +427,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: "100%",
     marginBottom: 24,
-    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.2)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 6,
   },
   buttonDisabled: {

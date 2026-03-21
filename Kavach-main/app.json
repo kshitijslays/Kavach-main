@@ -51,7 +51,9 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Shield to access your location for safety and emergency features."
         }
-      ]
+      ],
+      "expo-audio",
+      "expo-video"
     ]
   }
 }

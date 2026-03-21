@@ -35,21 +35,7 @@ export default function TabNavigator() {
               iconName = 'help-circle-outline';
           }
 
-          // Modern pill active state for the icon
-          return (
-            <View
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: focused ? 'rgba(49, 130, 206, 0.15)' : 'transparent',
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                borderRadius: 20,
-              }}
-            >
-              <Ionicons name={iconName} size={22} color={color} />
-            </View>
-          );
+          return <Ionicons name={iconName} size={24} color={color} />;
         },
         tabBarActiveTintColor: '#3182CE', // Trust Blue
         tabBarInactiveTintColor: '#94A3B8', // Slate 400
@@ -63,7 +49,10 @@ export default function TabNavigator() {
           borderRadius: 30,
           height: 64,
           borderTopWidth: 0,
-          boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.1,
+          shadowRadius: 15,
           elevation: 10,
           paddingBottom: 0, // Override default padding
         },

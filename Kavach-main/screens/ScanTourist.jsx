@@ -109,9 +109,11 @@ const styles = StyleSheet.create({
   },
   scannerLine: {
     width: "100%",
-    height: 2,
     backgroundColor: "#007BFF",
-    boxShadow: "0px 0px 10px rgba(0, 123, 255, 1)",
+    shadowColor: "#007BFF",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
   },
   captureButton: {
     backgroundColor: "#007BFF",

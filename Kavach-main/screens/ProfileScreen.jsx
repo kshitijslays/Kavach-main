@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUser } from '../context/UserContext';
@@ -64,7 +65,7 @@ export default function ProfileScreen({ navigation, route }) {
           <View style={styles.userMeta}>
             <Text style={styles.userName}>{userData.name}</Text>
             <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-seal" size={14} color="#3B82F6" />
+              {user?.isVerified && <Ionicons name="shield-checkmark" size={14} color="#3B82F6" />}
               <Text style={styles.verifiedText}>Shield Verified</Text>
             </View>
           </View>
@@ -179,7 +180,10 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    boxShadow: "0px 4px 12px rgba(15, 23, 42, 0.05)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
     elevation: 3,
   },
   avatar: {

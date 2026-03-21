@@ -1,13 +1,14 @@
 import React, { useState, useRef } from "react";
 import { 
   useWindowDimensions,
+  Animated,
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
-  Animated,
+  Platform
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TravelProfileScreen({ navigation }) {
@@ -183,7 +184,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
   selectedCard: {

@@ -3,10 +3,9 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
-  TouchableOpacity, 
   ActivityIndicator 
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function KycScreen({ route, navigation }) {
@@ -112,7 +111,10 @@ const styles = StyleSheet.create({
     padding: 8,
     backgroundColor: "#fff",
     borderRadius: 8,
-    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     elevation: 2,
   },
   placeholder: {
@@ -141,7 +143,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 25,
-    boxShadow: "0px 4px 8px rgba(212, 16, 93, 0.2)",
+    shadowColor: "#D4105D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 5,
   },
   scanTitle: {
@@ -179,7 +184,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 25,
-    boxShadow: "0px 6px 12px rgba(212, 16, 93, 0.2)",
+    shadowColor: "#D4105D",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
     elevation: 8,
   },
   successTitle: {
@@ -206,7 +214,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     borderRadius: 12,
     width: "100%",
-    boxShadow: "0px 4px 8px rgba(212, 16, 93, 0.3)",
+    shadowColor: "#D4105D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 6,
   },
   primaryBtnText: {

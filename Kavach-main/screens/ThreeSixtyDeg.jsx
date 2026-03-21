@@ -9,6 +9,7 @@ import {
   Platform,
   Linking
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 import { Ionicons } from "@expo/vector-icons";
 
@@ -59,18 +60,18 @@ function LiveLocationWeb() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#d4105d" />
           <Text style={styles.loadingText}>Getting your location...</Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (errorMsg) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Ionicons name="location-off" size={64} color="#ff6b6b" />
           <Text style={styles.errorText}>{errorMsg}</Text>
@@ -78,12 +79,12 @@ function LiveLocationWeb() {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Live Location (Web)</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={getWebLocation}>
@@ -122,7 +123,7 @@ function LiveLocationWeb() {
           Location accessed via browser geolocation API
         </Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -174,18 +175,18 @@ function LiveLocationNative() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#d4105d" />
           <Text style={styles.loadingText}>Getting your location...</Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (errorMsg) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Ionicons name="location-off" size={64} color="#d4105d" />
           <Text style={styles.errorText}>{errorMsg}</Text>
@@ -193,12 +194,12 @@ function LiveLocationNative() {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Live Location</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={getCurrentLocation}>
@@ -255,7 +256,7 @@ function LiveLocationNative() {
           Location updates every 30 seconds
         </Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 20,
     paddingBottom: 20,
     backgroundColor: '#f8f9fa',
   },

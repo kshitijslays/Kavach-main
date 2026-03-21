@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
+  FlatList,
+  Keyboard,
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
-  TextInput,
   ActivityIndicator,
   Alert,
   Platform,
   StatusBar,
-  ScrollView,
-  FlatList,
-  Keyboard,
+  TextInput,
+  useWindowDimensions
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Polyline, Marker, Circle, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
@@ -671,7 +671,10 @@ export default function SafeRouteMapScreen({ navigation }) {
                       { borderColor: routeColor(idx) },
                       idx === selectedRoute && {
                         backgroundColor: "rgba(255,255,255,1)",
-                        boxShadow: `0px 0px 12px ${routeColor(idx)}26`,
+                        shadowColor: routeColor(idx),
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 12,
                         elevation: 10,
                         borderWidth: 2,
                       },
@@ -748,7 +751,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 24,
     paddingBottom: 20,
-    boxShadow: "0px 4px 16px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
     elevation: 8,
     zIndex: 10,
   },
@@ -759,7 +765,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 16,
-    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 4,
   },
   headerTitleContainer: {
@@ -767,7 +776,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 4,
   },
   headerTitle: {
@@ -782,7 +794,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 0, // removed elevation since it's inside a bordered card now
   },
 
@@ -800,7 +815,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 32,
     paddingTop: 12,
     paddingBottom: Platform.OS === "ios" ? 32 : 24,
-    boxShadow: "0px -8px 16px rgba(0, 0, 0, 0.1)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
     elevation: 20,
   },
   sheetHandle: {
@@ -873,7 +891,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 4,
     position: 'absolute',
     top: 56,
@@ -918,7 +939,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 24,
-    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.2)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 6,
   },
   goBtnText: {

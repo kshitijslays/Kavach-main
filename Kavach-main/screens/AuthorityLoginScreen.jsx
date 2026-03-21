@@ -3,7 +3,6 @@ import { useState } from "react";
 import {
   Alert,
   Platform,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AuthorityLoginScreen({ navigation }) {
   const [officialId, setOfficialId] = useState("");
@@ -18,7 +18,6 @@ export default function AuthorityLoginScreen({ navigation }) {
 
   const handleLogin = () => {
     if (officialId.length >= 8 && password.length >= 8) {
-      // This logic correctly navigates and passes the ID
       navigation.navigate("authHome", { officialId: officialId });
     } else {
       Alert.alert(

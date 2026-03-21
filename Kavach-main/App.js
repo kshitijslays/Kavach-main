@@ -1,0 +1,75 @@
+import './global.css';
+import 'react-native-gesture-handler';
+// filepath: c:\Users\rakhi\Desktop\Rakshak\App.jsx
+import { LogBox } from 'react-native';
+console.log("=====================================");
+console.log("🚀 EVALUATING MODULE: App.js");
+console.log("=====================================");
+import React from "react";
+import { Platform } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import * as Location from "expo-location";
+
+// Import screens
+import AuthHome from "./screens/authHome.jsx"; // Make sure path is correct
+import RoleSelectionScreen from "./screens/RoleSelectionScreen.js";
+import TouristSignUpScreen from "./screens/TouristSignUpScreen.jsx";
+import AuthorityLoginScreen from "./screens/AuthorityLoginScreen.jsx";
+import OTPScreen from "./screens/otp.jsx";
+import LoginScreen from "./screens/LoginScreen.jsx";
+import VerificationSuccess from "./screens/VerificationSuccess";
+import TravelProfileScreen from "./screens/TravelProfileScreen";
+import KycSimulation from "./screens/KYCSimulation.jsx";
+import TripDetails from "./screens/TripDetails.jsx";
+import ProfileScreen from "./screens/ProfileScreen.jsx";
+import HomePage from "./screens/HomePage.jsx";
+import TabNavigator from "./navigations/TabNavigator.jsx";
+import MovementDetector from "./screens/MovementDetector.js";
+import SafeRouteMap from "./screens/SafeRouteMap";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { UserProvider } from "./context/UserContext";
+
+LogBox.ignoreLogs(['SafeAreaView has been deprecated']);
+
+const Stack = createNativeStackNavigator();
+
+export default function App() {
+  console.log("🚀 App.js: Component is initializing!");
+  React.useEffect(() => {
+    console.log("🚀 App.js: Component did mount!");
+    (async () => {
+      // Request location permissions as soon as the app starts
+      await Location.requestForegroundPermissionsAsync();
+    })();
+  }, []);
+
+  return (
+    <SafeAreaProvider>
+      <UserProvider>
+        <NavigationContainer>
+          <MovementDetector />
+          <Stack.Navigator
+            initialRouteName="RoleSelection"
+            screenOptions={{
+              headerShown: false,
+              animation: Platform.OS === "ios" ? "default" : "fade",
+            }}
+          >
+            <Stack.Screen name="authHome" component={AuthHome} />
+            <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+            <Stack.Screen name="TouristSignUp" component={TouristSignUpScreen} />
+            <Stack.Screen name="AuthorityLogin" component={AuthorityLoginScreen} />
+            <Stack.Screen name="OTP" component={OTPScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="TravelProfile" component={TravelProfileScreen} />
+            <Stack.Screen name="TripDetails" component={TripDetails} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="SafeRouteMap" component={SafeRouteMap} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </UserProvider>
+    </SafeAreaProvider>
+  );
+}

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Audio } from "expo-av";
+import { Audio } from "expo-audio";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -9,7 +9,6 @@ import {
   Image,
   Modal,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
@@ -19,6 +18,7 @@ import {
   Vibration,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const alertSound = require("../assets/alarm.mp3");
 
@@ -389,7 +389,7 @@ const VerifiedTouristModal = ({ visible, onClose, tourist }) => {
                 </View>
 
                 <View style={styles.securitySection}>
-                  <Ionicons name="checkmark-seal" size={16} color="#10B981" />
+                  <Ionicons name="shield-checkmark" size={16} color="#10B981" />
                   <Text style={styles.securityText}>Verified Genuine Traveler</Text>
                 </View>
               </View>
@@ -1138,7 +1138,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginRight: 12,
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
     borderLeftWidth: 4,
   },
@@ -1182,7 +1185,10 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: "center",
     marginBottom: 12,
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
   statusIndicator: {
@@ -1277,7 +1283,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "48%",
     marginBottom: 12,
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
   actionIcon: {
@@ -1306,7 +1315,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     alignItems: "center",
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.25)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
     elevation: 4,
     width: "90%",
   },
@@ -1400,7 +1412,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 2,
     backgroundColor: "#03474f",
-    boxShadow: "0px 0px 10px rgba(3, 71, 79, 1)",
+    shadowColor: "#03474f",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
   },
   scannerCornerTL: {
     position: "absolute",
@@ -1522,7 +1537,10 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 24,
     backgroundColor: "#fff",
-    boxShadow: "0px 16px 32px rgba(15, 23, 42, 0.1)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.1,
+    shadowRadius: 32,
     elevation: 12,
     marginBottom: 20,
     overflow: 'hidden',
@@ -1679,7 +1697,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
     elevation: 2,
   },
   touristImage: {

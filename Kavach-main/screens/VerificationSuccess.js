@@ -4,10 +4,10 @@ import {
   Text, 
   TouchableOpacity, 
   StyleSheet, 
-  SafeAreaView,
   Animated,
   Easing
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function VerificationSuccess({ navigation, route }) {
@@ -138,7 +138,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 35,
-    boxShadow: "0px 8px 16px rgba(212, 16, 93, 0.2)",
+    shadowColor: "#D4105D",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
     elevation: 10,
     position: "relative",
   },
@@ -188,7 +191,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     marginBottom: 30,
-    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.05)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
     borderColor: "#f0f0f0",
@@ -227,7 +233,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 12,
     width: "100%",
-    boxShadow: "0px 4px 8px rgba(212, 16, 93, 0.3)",
+    shadowColor: "#D4105D",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 6,
   },
   buttonText: {

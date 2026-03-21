@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import {
-  SafeAreaView,
+  ActivityIndicator,
   View,
   Text,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Platform,
-  KeyboardAvoidingView,
+  ScrollView,
   Alert,
-  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  useWindowDimensions
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { authAPI } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -264,7 +266,10 @@ const styles = StyleSheet.create({
   inputContainerFocused: {
     borderColor: "#3182CE",
     backgroundColor: "#ffffff",
-    boxShadow: "0px 4px 8px rgba(49, 130, 206, 0.1)",
+    shadowColor: "#3182CE",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 4,
   },
   inputIcon: {
@@ -284,7 +289,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A", // Deep Navy
     height: 56,
     borderRadius: 16,
-    boxShadow: "0px 4px 8px rgba(15, 23, 42, 0.2)",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 6,
     marginBottom: 24,
   },
