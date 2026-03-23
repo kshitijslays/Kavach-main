@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Platform, Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert } from "react-native";
+import { Platform, Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, Vibration } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from "../context/UserContext";
 import * as Speech from "expo-speech";
@@ -140,7 +140,7 @@ export default function MovementDetector() {
         console.log("Location permission denied");
       }
 
-      Accelerometer.setUpdateInterval(500);
+      Accelerometer.setUpdateInterval(150); // Faster polling to catch shakes before sleep
 
       subscription = Accelerometer.addListener(async (acc) => {
         const { x, y, z } = acc;
@@ -153,6 +153,7 @@ export default function MovementDetector() {
           setLastAlert(now);
           setCountdown(15);
           setIsAlerting(true);
+          Vibration.vibrate([1000, 1000, 1000]); // Vibrate 3 times to alert user in pocket
           Speech.speak("Sudden movement detected. Are you safe? You have 15 seconds to respond.");
         }
       });

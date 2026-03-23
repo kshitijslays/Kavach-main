@@ -1,7 +1,7 @@
 // Configuration file for API endpoints and app settings
 export const config = {
   // Development API URL - change this to your backend server URL  
-  API_BASE_URL: 'http://192.168.0.115:5000/api', // Local network IP
+  API_BASE_URL: 'http://10.27.105.62:5000/api', // Local network IP
   
   // If deploying to production, you can change this to:
   // API_BASE_URL: 'https://your-backend-domain.com/api',
