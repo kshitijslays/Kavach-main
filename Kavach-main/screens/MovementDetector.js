@@ -5,6 +5,7 @@ import { useUser } from "../context/UserContext";
 import * as Speech from "expo-speech";
 import * as SMS from "expo-sms";
 import { emergencyAPI } from "../services/api";
+import { Audio } from "expo-av";
 
 let Accelerometer, Location;
 if (Platform.OS !== "web") {
@@ -38,6 +39,55 @@ export default function MovementDetector() {
     return clean.startsWith('+') ? clean : `+${clean}`;
   };
 
+  const recordAndSendAudio = async (contacts) => {
+    try {
+      console.log("🎤 Requesting mic permission...");
+      const perm = await Audio.requestPermissionsAsync();
+      if (perm.status !== 'granted') {
+        console.log("❌ Mic permission denied");
+        return;
+      }
+      
+      console.log("🎙️ Starting 30-sec emergency audio recording...");
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+
+      // Wait 30 seconds
+      setTimeout(async () => {
+        console.log("⏹️ Stopping audio recording after 30 seconds...");
+        await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
+        
+        console.log("📤 Uploading audio to backend...", uri);
+        
+        const formData = new FormData();
+        formData.append("audio", {
+          uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+          name: "emergency_audio.m4a",
+          type: "audio/m4a"
+        });
+        formData.append("contacts", JSON.stringify(contacts));
+
+        try {
+          const res = await emergencyAPI.uploadAudio(formData);
+          console.log("✅ Audio successfully sent securely to WhatsApp!", res.message);
+        } catch (uploadErr) {
+          console.error("❌ Failed to upload audio: ", uploadErr);
+        }
+
+      }, 30000);
+
+    } catch (err) {
+      console.error("❌ Audio recording error:", err);
+    }
+  };
+
   const triggerEmergency = async () => {
     setIsAlerting(false);
     console.log("🚨 Emergency Alert Triggered!");
@@ -59,6 +109,9 @@ export default function MovementDetector() {
       }
       
       if (contacts.length > 0) {
+        // Start 30-second audio recording to send a follow up
+        recordAndSendAudio(contacts);
+
         // 3. TRIGGER BACKEND FOR ZERO-CLICK AUTOMATION 🚀
         // This sends SMS and WhatsApp messages from the server, 
         // requiring NO interaction from the user's phone.
@@ -95,14 +148,7 @@ export default function MovementDetector() {
           }
         }
 
-        // 4. Initiate Local Backup Phone Call
-        // Note: For the local phone dialer, using just digits (without +) 
-        // can sometimes be more reliable on certain Android devices.
-        const dialerNumber = contacts[0].number.replace(/[^\d]/g, ''); 
-        console.log(`📞 Opening local dialer for backup call: ${dialerNumber}`);
-        setTimeout(() => {
-          Linking.openURL(`tel:${dialerNumber}`);
-        }, 1500);
+        // Local backup dialer removed per user request
 
       } else {
         console.warn("No emergency contacts found to alert.");

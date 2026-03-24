@@ -60,6 +60,17 @@ export const authAPI = {
 
 export const emergencyAPI = {
   triggerAlert: (data) => api.post('/emergency/alert', data),
+  uploadAudio: async (formData) => {
+    const response = await fetch(`${config.API_BASE_URL}/emergency/audio-alert`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Upload failed: ${errorText}`);
+    }
+    return await response.json();
+  },
 };
 
 export { config };
