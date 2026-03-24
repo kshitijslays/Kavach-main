@@ -1,6 +1,13 @@
 import User from "../models/userModel.js";
 import { sendMail } from "../utils/sendMail.js";
 import twilio from "twilio";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({ 
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET 
+});
 
 // Twilio Client Initialization
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -137,5 +144,72 @@ export const triggerEmergencyAlert = async (req, res) => {
   } catch (error) {
     console.error("❌ Backend Emergency Error:", error);
     res.status(500).json({ message: "Failed to process emergency alert", error: error.message });
+  }
+};
+
+export const uploadEmergencyAudio = async (req, res) => {
+  const { contacts } = req.body;
+  const file = req.file;
+
+  if (!file || !contacts) {
+    return res.status(400).json({ message: "Audio file and contacts are required." });
+  }
+
+  let parsedContacts = [];
+  try {
+    parsedContacts = typeof contacts === 'string' ? JSON.parse(contacts) : contacts;
+  } catch (e) {
+    console.error("Failed to parse contacts", e);
+    return res.status(400).json({ message: "Invalid contacts format." });
+  }
+
+  try {
+    const b64 = Buffer.from(file.buffer).toString('base64');
+    const dataURI = `data:${file.mimetype};base64,${b64}`;
+
+    console.log("⬆️ Uploading emergency audio to Cloudinary...");
+    const uploadResult = await cloudinary.uploader.upload(dataURI, {
+      resource_type: "video",
+      folder: "emergency_audio"
+    });
+
+    console.log("✅ Audio uploaded: ", uploadResult.secure_url);
+
+    // WhatsApp officially prefers mp3 or ogg for voice notes over Twilio
+    // Cloudinary automatically transcodes the file if we change the extension!
+    const whatsappAudioUrl = uploadResult.secure_url.replace(/\.[^/.]+$/, ".mp3");
+    console.log("🎵 Transcoded URL for WhatsApp: ", whatsappAudioUrl);
+
+    if (!client && accountSid && authToken) {
+      client = twilio(accountSid, authToken);
+    }
+    if (!client) return res.status(500).json({ message: "Twilio uninitialized" });
+
+    const results = [];
+    const fullMessage = "🚨 FOLLOW UP: Here is the 30-second audio recording from the emergency alert.";
+
+    for (const contact of parsedContacts) {
+      const clean = contact.number.replace(/[^\d+]/g, '');
+      const e164Number = clean.length === 10 && !clean.startsWith('+') ? `+91${clean}` : clean.startsWith('+') ? clean : `+${clean}`;
+
+      try {
+        const wa = await client.messages.create({
+          body: fullMessage,
+          from: whatsappNumber,
+          to: `whatsapp:${e164Number}`,
+          mediaUrl: [whatsappAudioUrl]
+        });
+        results.push({ type: 'WhatsApp Audio', contact: contact.name, status: 'success' });
+        console.log(`   ✅ [WhatsApp Audio] Sent to ${contact.name}`);
+      } catch (err) {
+        console.error(`   ❌ [WhatsApp Audio] Failed for ${contact.name}`, err.message);
+        results.push({ type: 'WhatsApp Audio', contact: contact.name, status: 'error', error: err.message });
+      }
+    }
+
+    res.status(200).json({ message: "Audio alert sent successfully", results, mediaUrl: uploadResult.secure_url });
+  } catch (error) {
+    console.error("❌ Audio Upload Error:", error);
+    res.status(500).json({ message: "Failed to process audio alert", error: error.message });
   }
 };
