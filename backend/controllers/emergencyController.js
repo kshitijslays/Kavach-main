@@ -175,10 +175,11 @@ export const uploadEmergencyAudio = async (req, res) => {
 
     console.log("✅ Audio uploaded: ", uploadResult.secure_url);
 
-    // WhatsApp officially prefers mp3 or ogg for voice notes over Twilio
-    // Cloudinary automatically transcodes the file if we change the extension!
-    const whatsappAudioUrl = uploadResult.secure_url.replace(/\.[^/.]+$/, ".mp3");
-    console.log("🎵 Transcoded URL for WhatsApp: ", whatsappAudioUrl);
+    // Use Cloudinary's built-in format transformation (f_mp3) to reliably serve mp3.
+    // Inserting /f_mp3/ into the URL path triggers Cloudinary's on-the-fly transcoding,
+    // which is guaranteed to work — unlike a naive file extension rename which produces a 404.
+    const whatsappAudioUrl = uploadResult.secure_url.replace('/upload/', '/upload/f_mp3/');
+    console.log("🎵 Transcoded mp3 URL for WhatsApp: ", whatsappAudioUrl);
 
     if (!client && accountSid && authToken) {
       client = twilio(accountSid, authToken);
@@ -186,24 +187,40 @@ export const uploadEmergencyAudio = async (req, res) => {
     if (!client) return res.status(500).json({ message: "Twilio uninitialized" });
 
     const results = [];
-    const fullMessage = "🚨 FOLLOW UP: Here is the 30-second audio recording from the emergency alert.";
+    // This message is sent as a text fallback in case Twilio rejects the media attachment.
+    const textFallbackMessage = `🚨 FOLLOW UP: Here is the 30-second emergency audio recording:\n${whatsappAudioUrl}`;
 
     for (const contact of parsedContacts) {
       const clean = contact.number.replace(/[^\d+]/g, '');
       const e164Number = clean.length === 10 && !clean.startsWith('+') ? `+91${clean}` : clean.startsWith('+') ? clean : `+${clean}`;
 
+      // Step 1: Try sending with audio media attachment
       try {
         const wa = await client.messages.create({
-          body: fullMessage,
+          body: "🚨 FOLLOW UP: 30-second emergency audio recording attached.",
           from: whatsappNumber,
           to: `whatsapp:${e164Number}`,
           mediaUrl: [whatsappAudioUrl]
         });
-        results.push({ type: 'WhatsApp Audio', contact: contact.name, status: 'success' });
-        console.log(`   ✅ [WhatsApp Audio] Sent to ${contact.name}`);
+        results.push({ type: 'WhatsApp Audio', contact: contact.name, status: 'success', sid: wa.sid });
+        console.log(`   ✅ [WhatsApp Audio] Sent to ${contact.name} (${e164Number}): ${wa.sid}`);
       } catch (err) {
-        console.error(`   ❌ [WhatsApp Audio] Failed for ${contact.name}`, err.message);
-        results.push({ type: 'WhatsApp Audio', contact: contact.name, status: 'error', error: err.message });
+        console.error(`   ❌ [WhatsApp Audio media] Failed for ${contact.name} (${e164Number}):`, err.message);
+        // Step 2: Fallback — send the Cloudinary recording URL as a plain text link.
+        // This ensures the contact always receives the recording even if Twilio
+        // rejects the media attachment (e.g. Sandbox restrictions, codec issues).
+        try {
+          const waText = await client.messages.create({
+            body: textFallbackMessage,
+            from: whatsappNumber,
+            to: `whatsapp:${e164Number}`
+          });
+          results.push({ type: 'WhatsApp Audio (link)', contact: contact.name, status: 'success', sid: waText.sid });
+          console.log(`   ✅ [WhatsApp Audio fallback] Sent link to ${contact.name} (${e164Number}): ${waText.sid}`);
+        } catch (fallbackErr) {
+          console.error(`   ❌ [WhatsApp Audio fallback] Also failed for ${contact.name} (${e164Number}):`, fallbackErr.message);
+          results.push({ type: 'WhatsApp Audio', contact: contact.name, status: 'error', error: fallbackErr.message });
+        }
       }
     }
 
