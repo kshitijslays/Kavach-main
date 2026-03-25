@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { Platform, Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Alert, Vibration } from "react-native";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { Platform, Modal, View, Text, TouchableOpacity, StyleSheet, Alert, Vibration } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from "../context/UserContext";
 import * as Speech from "expo-speech";
 import * as SMS from "expo-sms";
 import { emergencyAPI } from "../services/api";
 import { Audio } from "expo-av";
+import VoiceTriggerDetector from "./VoiceTriggerDetector";
 
 let Accelerometer, Location;
 if (Platform.OS !== "web") {
@@ -17,7 +18,10 @@ export default function MovementDetector() {
   const [lastAlert, setLastAlert] = useState(0);
   const [isAlerting, setIsAlerting] = useState(false);
   const [countdown, setCountdown] = useState(15);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const { user } = useUser();
+  // Ref to VoiceTriggerDetector so we can stop scream recording before emergency recording
+  const voiceDetectorRef = useRef(null);
 
   // Handle countdown timer
   useEffect(() => {
@@ -47,6 +51,11 @@ export default function MovementDetector() {
         console.log("❌ Mic permission denied");
         return;
       }
+
+      // Stop the scream detector recording so expo-av slot is free
+      voiceDetectorRef.current?.stopScreamDetector();
+      // Small delay to ensure the scream recording has fully released
+      await new Promise(resolve => setTimeout(resolve, 400));
       
       console.log("🎙️ Starting 30-sec emergency audio recording...");
       await Audio.setAudioModeAsync({
@@ -87,6 +96,15 @@ export default function MovementDetector() {
       console.error("❌ Audio recording error:", err);
     }
   };
+
+  // Called directly by voice trigger — no countdown needed
+  const handleVoiceTrigger = useCallback(async (reason) => {
+    console.log(`🚨 Voice emergency triggered: ${reason}`);
+    Speech.speak("Voice emergency alert activated. Contacting emergency contacts.");
+    Vibration.vibrate([500, 500, 500]);
+    await triggerEmergency();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const triggerEmergency = async () => {
     setIsAlerting(false);
@@ -212,31 +230,40 @@ export default function MovementDetector() {
     };
   }, [lastAlert, isAlerting]);
 
-  if (!isAlerting) return null;
-
+  // Always render VoiceTriggerDetector (it's headless) so it keeps listening
+  // even when the shake-alert modal is not shown.
   return (
-    <Modal visible={isAlerting} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.alertBox}>
-          <Text style={styles.title}>Are you safe?</Text>
-          <Text style={styles.subtitle}>
-            Sudden movement was detected. If you do not respond, your emergency contacts will be alerted.
-          </Text>
-          
-          <Text style={styles.countdown}>{countdown}</Text>
-          <Text style={styles.secText}>seconds remaining</Text>
+    <>
+      <VoiceTriggerDetector
+        ref={voiceDetectorRef}
+        enabled={voiceEnabled && Platform.OS !== "web"}
+        onTrigger={handleVoiceTrigger}
+      />
+      {isAlerting && (
+        <Modal visible={isAlerting} transparent animationType="fade">
+          <View style={styles.overlay}>
+            <View style={styles.alertBox}>
+              <Text style={styles.title}>Are you safe?</Text>
+              <Text style={styles.subtitle}>
+                Sudden movement was detected. If you do not respond, your emergency contacts will be alerted.
+              </Text>
 
-          <View style={styles.btnRow}>
-            <TouchableOpacity style={styles.safeBtn} onPress={handleImSafe}>
-              <Text style={styles.btnText}>YES, I AM SAFE</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.helpBtn} onPress={handleNeedHelp}>
-              <Text style={styles.btnText}>NO, I NEED HELP</Text>
-            </TouchableOpacity>
+              <Text style={styles.countdown}>{countdown}</Text>
+              <Text style={styles.secText}>seconds remaining</Text>
+
+              <View style={styles.btnRow}>
+                <TouchableOpacity style={styles.safeBtn} onPress={handleImSafe}>
+                  <Text style={styles.btnText}>YES, I AM SAFE</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.helpBtn} onPress={handleNeedHelp}>
+                  <Text style={styles.btnText}>NO, I NEED HELP</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
-    </Modal>
+        </Modal>
+      )}
+    </>
   );
 }
 

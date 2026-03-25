@@ -7,12 +7,16 @@ import HomePage from "../screens/HomePage";
 import ProfileScreen from '../screens/ProfileScreen';
 import SafeRouteMap from '../screens/SafeRouteMap';
 import ThreeSixtyDeg from '../screens/ThreeSixtyDeg';
+import MovementDetector from '../screens/MovementDetector';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
   return (
-    <Tab.Navigator
+    <>
+      {/* MovementDetector starts ONLY after user reaches the main dashboard */}
+      <MovementDetector />
+      <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color }) => {
@@ -76,5 +80,6 @@ export default function TabNavigator() {
         component={ProfileScreen}
       />
     </Tab.Navigator>
+    </>
   );
 }

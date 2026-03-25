@@ -25,7 +25,6 @@ import TripDetails from "./screens/TripDetails.jsx";
 import ProfileScreen from "./screens/ProfileScreen.jsx";
 import HomePage from "./screens/HomePage.jsx";
 import TabNavigator from "./navigations/TabNavigator.jsx";
-import MovementDetector from "./screens/MovementDetector.js";
 import SafeRouteMap from "./screens/SafeRouteMap";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { UserProvider } from "./context/UserContext";
@@ -48,7 +47,6 @@ export default function App() {
     <SafeAreaProvider>
       <UserProvider>
         <NavigationContainer>
-          <MovementDetector />
           <Stack.Navigator
             initialRouteName="RoleSelection"
             screenOptions={{
