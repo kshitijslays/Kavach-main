@@ -68,3 +68,69 @@ Kavach is built on a robust, scalable, and decentralized technology stack.
 | **React Native (Expo)** | Cross-platform development for the tourist mobile application. |
 | **React / Next.js** | Development of the Authority Real-time Visualization Dashboard. |
 | **Nativewind** | Utility-first CSS framework for responsive design and seamless styling in React Native. |
+
+How safety route is calculated ?
+
+Kavach calculates route safety with combined signals:
+Street lighting (well-lit → best)
+Business density (more businesses → safer)
+Population density (more people → safer)
+
+Route data flow
+Get origin + destination coordinates (source text geocoding)
+Fetch route alternatives from OpenRouteService (driving-car)
+Compute route bounds (buffer around origin+destination)
+Fetch OSM lighting data in bounds
+Fetch OSM business/population proxies in bounds
+For each route:
+decode polyline into points
+apply lighting classification per point
+compute density scores near points
+combine into final safety score
+Sort routes by final score, show top 2
+
+Route data flow
+Get origin + destination coordinates (source text geocoding)
+Fetch route alternatives from OpenRouteService (driving-car)
+Compute route bounds (buffer around origin+destination)
+Fetch OSM lighting data in bounds
+Fetch OSM business/population proxies in bounds
+For each route:
+decode polyline into points
+apply lighting classification per point
+compute density scores near points
+combine into final safety score
+Sort routes by final score, show top 2
+
+Function: scoreBusinessDensity(points, businessData)
+
+For each route point:
+count nearby business points within 70m (shops/restaurants/banks/etc)
+Score = (matchedPoints / totalPoints) * 100
+0 = none, 100 = all points near business
+
+
+. Population density score
+Function: scorePopulationDensity(points, populationData)
+
+Route points close to residential/urban way segments
+Score = (matchedPoints / totalPoints) * 100
+
+6. Composite safety score
+Function: combineScores(lighting, business, population)
+
+Weights used:
+
+lighting: 55%
+business: 30%
+population: 15%
+
+Lighting Source
+Source: OpenStreetMap via Overpass API in services/streetLightingService.js
+
+Business
+Source: OpenStreetMap via Overpass API in same service (fetchBusinessAndPopulationData)
+
+Population (urban/residential density bucket)
+Source: OpenStreetMap via Overpass API in same service function
+

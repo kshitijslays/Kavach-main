@@ -11,12 +11,14 @@ import {
   Platform,
   StatusBar,
   TextInput,
+  ScrollView,
   useWindowDimensions
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapView, { Polyline, Marker, Circle, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { fetchStreetLightsInArea, calculateRouteBounds, fetchBusinessAndPopulationData } from "../services/streetLightingService";
 
 // -----------------------------------------------------------------------
 // OpenRouteService API Key (free, no credit card required)
@@ -97,101 +99,209 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const Δλ = (lon2 - lon1) * m;
 
   const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
 // ------------------------------------------------------------------
-// Generate mock crime zones between Origin and Destination
+// Segment route arrays based on lighting conditions
 // ------------------------------------------------------------------
-function generateCrimeZones(origin, dest) {
-  const zones = [];
-  const numZones = Math.floor(Math.random() * 3) + 2; // 2 to 4 zones
-  
-  for (let i = 0; i < numZones; i++) {
-    // Pick a random point somewhere along the path
-    const t = 0.2 + (Math.random() * 0.6); // Between 20% and 80% of the way
-    const lat = origin.latitude + (dest.latitude - origin.latitude) * t + (Math.random() - 0.5) * 0.02;
-    const lng = origin.longitude + (dest.longitude - origin.longitude) * t + (Math.random() - 0.5) * 0.02;
-    
-    zones.push({
-      id: i,
-      latitude: lat,
-      longitude: lng,
-      radius: Math.floor(Math.random() * 800) + 400, // 400m to 1200m radius
-      type: Math.random() > 0.4 ? "red" : "yellow" // 60% high risk, 40% mod risk
-    });
-  }
-  return zones;
-}
-
-// ------------------------------------------------------------------
-// Segment route arrays based on intersection with crime zones
-// ------------------------------------------------------------------
-function segmentRoute(points, crimeZones) {
+function segmentRoute(points, lightingData) {
   if (!points || points.length === 0) return [];
+
+  console.log(`Segmenting route with ${points.length} points and ${lightingData.length} lighting elements`);
 
   const segments = [];
   let currentSegment = [];
-  let currentSafety = "green"; // Default
+  let currentLighting = "unknown";
 
   for (let i = 0; i < points.length; i++) {
     const pt = points[i];
-    
-    // Check if point is inside any crime zone
-    let pointSafety = "green";
-    for (const zone of crimeZones) {
-      const dist = getDistance(pt.latitude, pt.longitude, zone.latitude, zone.longitude);
-      if (dist <= zone.radius) {
-        if (zone.type === "red") {
-          pointSafety = "red";
-          break; // Red overrides yellow
-        } else if (zone.type === "yellow") {
-          pointSafety = "yellow";
-        }
-      }
-    }
+
+    // Determine lighting status for this point
+    const pointLighting = determineLightingAtPoint(pt, lightingData);
 
     if (currentSegment.length === 0) {
       currentSegment.push(pt);
-      currentSafety = pointSafety;
-    } else if (pointSafety === currentSafety) {
+      currentLighting = pointLighting;
+    } else if (pointLighting === currentLighting) {
       currentSegment.push(pt);
     } else {
-      // Safety level changed -> end current segment and start a new one
-      // Include the current point in both segments perfectly connect the polylines
-      currentSegment.push(pt); 
-      segments.push({ color: currentSafety, points: currentSegment });
+      // Lighting status changed -> end current segment and start a new one
+      currentSegment.push(pt);
+      segments.push({
+        color: getLightingColor(currentLighting),
+        points: currentSegment,
+        lighting: currentLighting
+      });
 
       currentSegment = [pt];
-      currentSafety = pointSafety;
+      currentLighting = pointLighting;
     }
   }
 
   if (currentSegment.length > 0) {
-    segments.push({ color: currentSafety, points: currentSegment });
+    segments.push({
+      color: getLightingColor(currentLighting),
+      points: currentSegment,
+      lighting: determineLightingAtPoint(currentSegment[0], lightingData)
+    });
   }
 
+  console.log(`Created ${segments.length} segments`);
   return segments;
 }
 
-// Calculate an overall route score (0-100) based on segment distances
-function scoreSegmentedRoute(segments) {
-  let redPts = 0, yellowPts = 0, greenPts = 0;
-  segments.forEach(seg => {
-    if (seg.color === "red") redPts += seg.points.length;
-    else if (seg.color === "yellow") yellowPts += seg.points.length;
-    else greenPts += seg.points.length;
+function determineLightingAtPoint(point, lightingData) {
+  // Check proximity to street lamps (within 50 meters)
+  const nearbyLamps = lightingData.filter(light =>
+    light.type === 'street_lamp' &&
+    getDistance(point.latitude, point.longitude,
+      light.position.latitude, light.position.longitude) <= 50 // 50 meters
+  );
+
+  if (nearbyLamps.length > 0) {
+    console.log(`Point (${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}) is well_lit (${nearbyLamps.length} lamps nearby)`);
+    return "well_lit";
+  }
+
+  // Check if point is on a lit road
+  const litRoads = lightingData.filter(light =>
+    light.type === 'road_segment' && light.isLit &&
+    isPointOnWay(point, light.geometry)
+  );
+
+  if (litRoads.length > 0) {
+    console.log(`Point (${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}) is lit (${litRoads.length} lit roads)`);
+    return "lit";
+  }
+
+  console.log(`Point (${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}) is unlit`);
+  return "unlit";
+}
+
+function getLightingColor(lighting) {
+  switch (lighting) {
+    case "well_lit": return "green";
+    case "lit": return "yellow";
+    case "unlit": return "red";
+    default: return "gray";
+  }
+}
+
+function isPointOnWay(point, wayGeometry) {
+  if (!wayGeometry || wayGeometry.length < 2) return false;
+
+  // Simple check: see if point is close to any segment of the way
+  for (let i = 0; i < wayGeometry.length - 1; i++) {
+    const p1 = wayGeometry[i];
+    const p2 = wayGeometry[i + 1];
+
+    // Check if point is within 20 meters of the line segment
+    if (pointToLineDistance(point, p1, p2) <= 20) { // 20 meters
+      return true;
+    }
+  }
+  return false;
+}
+
+function pointToLineDistance(point, lineStart, lineEnd) {
+  const A = point.longitude - lineStart.lon;
+  const B = point.latitude - lineStart.lat;
+  const C = lineEnd.lon - lineStart.lon;
+  const D = lineEnd.lat - lineStart.lat;
+
+  const dot = A * C + B * D;
+  const lenSq = C * C + D * D;
+
+  if (lenSq === 0) return getDistance(point.latitude, point.longitude, lineStart.lat, lineStart.lon);
+
+  const param = dot / lenSq;
+
+  let xx, yy;
+  if (param < 0) {
+    xx = lineStart.lon;
+    yy = lineStart.lat;
+  } else if (param > 1) {
+    xx = lineEnd.lon;
+    yy = lineEnd.lat;
+  } else {
+    xx = lineStart.lon + param * C;
+    yy = lineStart.lat + param * D;
+  }
+
+  return getDistance(point.latitude, point.longitude, yy, xx);
+}
+
+// Calculate lighting-based safety score (0-100)
+function scoreRouteByLighting(segments) {
+  let wellLitPoints = 0, litPoints = 0, unlitPoints = 0;
+
+  console.log('Scoring route with', segments.length, 'segments');
+
+  segments.forEach((seg, index) => {
+    const pointCount = seg.points.length;
+    console.log(`Segment ${index}: ${pointCount} points, lighting: ${seg.lighting}`);
+    if (seg.lighting === "well_lit") wellLitPoints += pointCount;
+    else if (seg.lighting === "lit") litPoints += pointCount;
+    else if (seg.lighting === "unlit") unlitPoints += pointCount;
   });
-  
-  const total = redPts + yellowPts + greenPts;
-  if (total === 0) return 100;
-  
-  // High penalty for red, moderate for yellow
-  let score = 100 - ((redPts / total) * 100) - ((yellowPts / total) * 30);
-  return Math.max(0, Math.round(score));
+
+  const total = wellLitPoints + litPoints + unlitPoints;
+  console.log(`Total points: well_lit=${wellLitPoints}, lit=${litPoints}, unlit=${unlitPoints}, total=${total}`);
+
+  if (total === 0) return 50;
+
+  // Lighting safety score (0-100)
+  // Well-lit areas get high scores, unlit areas get penalties
+  const score = (
+    (wellLitPoints / total) * 100 +     // 100% for well-lit
+    (litPoints / total) * 70 -          // 70% for lit roads
+    (unlitPoints / total) * 50          // -50% penalty for unlit
+  );
+
+  const finalScore = Math.max(0, Math.min(100, Math.round(score)));
+  console.log(`Calculated score: ${finalScore}`);
+
+  return finalScore;
+}
+
+function scoreBusinessDensity(points, businessData) {
+  if (!points?.length || !businessData?.businessPoints) return 0;
+  const radiusMeters = 70;
+  let matched = 0;
+
+  points.forEach(pt => {
+    const hits = businessData.businessPoints.some(b =>
+      getDistance(pt.latitude, pt.longitude, b.latitude, b.longitude) <= radiusMeters
+    );
+    if (hits) matched += 1;
+  });
+
+  return Math.round((matched / points.length) * 100);
+}
+
+function scorePopulationDensity(points, populationData) {
+  if (!points?.length || !populationData?.populationWays) return 0;
+  let matched = 0;
+
+  points.forEach(pt => {
+    const hits = populationData.populationWays.some(way => isPointOnWay(pt, way));
+    if (hits) matched += 1;
+  });
+
+  return Math.round((matched / points.length) * 100);
+}
+
+function combineScores(lightingScore, businessScore, populationScore) {
+  const wLighting = 0.55;
+  const wBusiness = 0.30;
+  const wPopulation = 0.15;
+  return Math.max(0, Math.min(100, Math.round(
+    lightingScore * wLighting + businessScore * wBusiness + populationScore * wPopulation
+  )));
 }
 
 function routeColor(rank) {
@@ -225,17 +335,22 @@ export default function SafeRouteMapScreen({ navigation }) {
   const [usingCurrentLocation, setUsingCurrentLocation] = useState(true); // true = use GPS
   const [destination, setDestination] = useState("");
   const [routes, setRoutes] = useState([]);
-  const [crimeZones, setCrimeZones] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(0);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationLabel, setLocationLabel] = useState("Current Location"); // display label
+  const [businessPopulationData, setBusinessPopulationData] = useState(null);
 
   // Autocomplete states
   const [sourceSuggestions, setSourceSuggestions] = useState([]);
   const [destSuggestions, setDestSuggestions] = useState([]);
   const [showSourceSuggestions, setShowSourceSuggestions] = useState(false);
   const [showDestSuggestions, setShowDestSuggestions] = useState(false);
+
+  // Lighting-related states
+  const [lightingData, setLightingData] = useState([]);
+  const [lightingLoading, setLightingLoading] = useState(false);
+  const [lightingCache, setLightingCache] = useState({});
 
   // Request and fetch user location on mount
   useEffect(() => {
@@ -359,9 +474,16 @@ export default function SafeRouteMapScreen({ navigation }) {
         return;
       }
 
-      // Generate mock crime zones between the two points to simulate safety analysis
-      const newCrimeZones = generateCrimeZones(originCoord, destCoord);
-      setCrimeZones(newCrimeZones);
+      // Fetch street lighting data for the route area
+      setLightingLoading(true);
+      const routeBounds = calculateRouteBounds(originCoord, destCoord);
+      const newLightingData = await fetchStreetLightsInArea(routeBounds);
+      setLightingData(newLightingData);
+
+      // Fetch business/population indicators for hybrid scoring
+      const businessPopulation = await fetchBusinessAndPopulationData(routeBounds);
+      setBusinessPopulationData(businessPopulation);
+      setLightingLoading(false);
 
       // Fetch up to 3 alternative driving routes from ORS (GeoJSON: [lng, lat])
       const body = {
@@ -398,12 +520,19 @@ export default function SafeRouteMapScreen({ navigation }) {
 
       const parsed = data.routes.map((r, i) => {
         const rawPoints = decodePolyline(r.geometry);
-        const segments = segmentRoute(rawPoints, newCrimeZones);
-        const routeScore = scoreSegmentedRoute(segments);
-        
+        const segments = segmentRoute(rawPoints, newLightingData);
+        const lightingScore = scoreRouteByLighting(segments);
+        const businessScore = scoreBusinessDensity(rawPoints, businessPopulation);
+        const populationScore = scorePopulationDensity(rawPoints, businessPopulation);
+        const combinedScore = combineScores(lightingScore, businessScore, populationScore);
+
         return {
           segments,
-          score: routeScore,
+          score: combinedScore,
+          lightingScore,
+          businessScore,
+          populationScore,
+          combinedScore,
           points: rawPoints, // Full array for map bounding box
           distance: r.summary.distance,
           duration: r.summary.duration,
@@ -415,7 +544,18 @@ export default function SafeRouteMapScreen({ navigation }) {
         };
       });
 
-      const scored = parsed.sort((a, b) => b.score - a.score);
+      // Remove duplicates based on route geometry and keep unique alternatives
+      const uniqueMap = new Map();
+      parsed.forEach(route => {
+        const key = route.points.map(pt => `${pt.latitude.toFixed(5)}_${pt.longitude.toFixed(5)}`).join('|');
+        if (!uniqueMap.has(key)) uniqueMap.set(key, route);
+      });
+      const uniqueRoutes = Array.from(uniqueMap.values());
+
+      // Sort by composite safety score and keep top 2 routes
+      const scored = uniqueRoutes
+        .sort((a, b) => b.combinedScore - a.combinedScore)
+        .slice(0, 2);
 
       setRoutes(scored);
       setSelectedRoute(0);
@@ -425,6 +565,7 @@ export default function SafeRouteMapScreen({ navigation }) {
       Alert.alert("Error", "Failed to fetch routes. Check your internet connection.");
     }
     setLoading(false);
+    setLightingLoading(false);
   };
 
   const fitMapToRoutes = (routeList) => {
@@ -440,11 +581,11 @@ export default function SafeRouteMapScreen({ navigation }) {
 
   const initialRegion = userLocation
     ? {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      }
+      latitude: userLocation.latitude,
+      longitude: userLocation.longitude,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    }
     : null;
 
   return (
@@ -467,18 +608,6 @@ export default function SafeRouteMapScreen({ navigation }) {
             showsUserLocation
             showsMyLocationButton={false} // We custom position it or rely on the UI
           >
-            {/* Draw Simulated Crime Zones */}
-            {crimeZones.map((zone, i) => (
-              <Circle
-                key={`zone_${i}`}
-                center={{ latitude: zone.latitude, longitude: zone.longitude }}
-                radius={zone.radius}
-                fillColor={zone.type === "red" ? "rgba(231, 76, 60, 0.25)" : "rgba(243, 156, 18, 0.25)"}
-                strokeColor={zone.type === "red" ? "rgba(231, 76, 60, 0.5)" : "rgba(243, 156, 18, 0.5)"}
-                strokeWidth={1}
-              />
-            ))}
-
             {/* Draw each route in Segments */}
             {routes.map((route, routeIdx) => (
               route.segments.map((seg, segIdx) => {
@@ -651,15 +780,16 @@ export default function SafeRouteMapScreen({ navigation }) {
             {/* Handle */}
             <View style={styles.sheetHandle} />
 
-          {/* ── Routes Result Panel ── */}
+            {/* ── Routes Result Panel ── */}
             <View style={styles.panel}>
               <View style={styles.panelHeaderRow}>
                 <Text style={styles.panelTitle}>Suggested Routes</Text>
-                {loading && <ActivityIndicator color="#3182CE" size="small" />}
+                {(loading || lightingLoading) && <ActivityIndicator color="#3182CE" size="small" />}
               </View>
-              
+
               <ScrollView
                 horizontal
+                nestedScrollEnabled
                 showsHorizontalScrollIndicator={false}
                 style={styles.routeScroll}
               >
@@ -687,18 +817,15 @@ export default function SafeRouteMapScreen({ navigation }) {
                     <View style={styles.cardTopRow}>
                       <View style={[styles.routeBadge, { backgroundColor: routeColor(idx) }]}>
                         <Text style={styles.routeBadgeText}>
-                           {idx === 0 ? "Safest" : `Option ${idx + 1}`}
+                          {idx === 0 ? "Safest" : `Option ${idx + 1}`}
                         </Text>
                       </View>
-                      <Text style={[styles.safetyScore, { color: routeColor(idx) }]}>
-                        {route.score}% Safe
-                      </Text>
                     </View>
-                    
+
                     <Text style={styles.routeSummary} numberOfLines={1}>
                       {route.summary}
                     </Text>
-                    
+
                     <View style={styles.routeMeta}>
                       <View style={styles.metaBadge}>
                         <Ionicons name="time" size={14} color="#64748B" />
@@ -707,6 +834,10 @@ export default function SafeRouteMapScreen({ navigation }) {
                       <View style={styles.metaBadge}>
                         <Ionicons name="navigate" size={14} color="#64748B" />
                         <Text style={styles.routeMetaText}>{route.distanceText}</Text>
+                      </View>
+                      <View style={styles.metaBadge}>
+                        <Ionicons name="bar-chart" size={14} color="#64748B" />
+                        <Text style={styles.routeMetaText}>L {route.lightingScore} B {route.businessScore} P {route.populationScore}</Text>
                       </View>
                     </View>
                   </TouchableOpacity>
